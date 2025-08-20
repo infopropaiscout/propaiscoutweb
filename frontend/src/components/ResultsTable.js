@@ -13,12 +13,10 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import DownloadIcon from '@mui/icons-material/Download';
 import EmailIcon from '@mui/icons-material/Email';
-import InfoIcon from '@mui/icons-material/Info';
 
 function ResultsTable({ results, isLoading, onExport }) {
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [outreachMessage, setOutreachMessage] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [outreachMessage, setOutreachMessage] = useState('');
 
   const handleGenerateOutreach = async (propertyId) => {
     try {
@@ -157,7 +155,6 @@ function ResultsTable({ results, isLoading, onExport }) {
           <Button
             variant="contained"
             onClick={() => {
-              // TODO: Implement copy to clipboard
               navigator.clipboard.writeText(outreachMessage);
             }}
           >
