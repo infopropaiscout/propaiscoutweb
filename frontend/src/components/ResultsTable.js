@@ -12,6 +12,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Grid,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -198,24 +199,24 @@ function ResultsTable({ results, isLoading, onExport }) {
   ];
 
   const ROIDialog = ({ property }) => (
-    <Box>
+    <Box sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>ROI Analysis</Typography>
       <Grid container spacing={2}>
         <Grid item xs={6}>
-          <Typography variant="subtitle2">Purchase Price</Typography>
-          <Typography>${property.suggested_offer.toLocaleString()}</Typography>
+          <Typography variant="subtitle2" color="textSecondary">Purchase Price</Typography>
+          <Typography variant="h6">${property.suggested_offer.toLocaleString()}</Typography>
         </Grid>
         <Grid item xs={6}>
-          <Typography variant="subtitle2">Est. Repairs</Typography>
-          <Typography>${(property.square_feet * 20).toLocaleString()}</Typography>
+          <Typography variant="subtitle2" color="textSecondary">Est. Repairs</Typography>
+          <Typography variant="h6">${(property.square_feet * 20).toLocaleString()}</Typography>
         </Grid>
         <Grid item xs={6}>
-          <Typography variant="subtitle2">ARV</Typography>
-          <Typography>${property.predicted_resale_price.toLocaleString()}</Typography>
+          <Typography variant="subtitle2" color="textSecondary">ARV</Typography>
+          <Typography variant="h6">${property.predicted_resale_price.toLocaleString()}</Typography>
         </Grid>
         <Grid item xs={6}>
-          <Typography variant="subtitle2">Potential Profit</Typography>
-          <Typography color="success.main">
+          <Typography variant="subtitle2" color="textSecondary">Potential Profit</Typography>
+          <Typography variant="h6" color="success.main">
             ${(property.predicted_resale_price - property.suggested_offer - (property.square_feet * 20)).toLocaleString()}
           </Typography>
         </Grid>
@@ -273,7 +274,7 @@ function ResultsTable({ results, isLoading, onExport }) {
         </DialogTitle>
         <DialogContent>
           {dialogType === 'outreach' ? (
-            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', p: 2 }}>
               {selectedProperty?.outreachMessage}
             </Typography>
           ) : (
