@@ -6,7 +6,8 @@ import Container from '@mui/material/Container';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
 import Header from './components/Header';
-import SimpleDialog from './components/SimpleDialog';
+import ROIModal from './components/ROIModal';
+import MessageModal from './components/MessageModal';
 import { Snackbar, Alert, LinearProgress } from '@mui/material';
 import { propertyService } from './services/propertyService';
 
@@ -27,11 +28,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const [dialogConfig, setDialogConfig] = useState({
-    open: false,
-    type: null, // 'roi' or 'message'
-    message: ''
-  });
+  const [roiModalOpen, setRoiModalOpen] = useState(false);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [outreachMessage, setOutreachMessage] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
   const handleSearch = async (filters) => {
@@ -79,36 +78,24 @@ function App() {
   };
 
   const handleROIClick = (property) => {
-    console.log('Opening ROI dialog for:', property);
+    console.log('Opening ROI modal for:', property);
     setSelectedProperty(property);
-    setDialogConfig({
-      open: true,
-      type: 'roi',
-      message: ''
-    });
+    setRoiModalOpen(true);
   };
 
   const handleMessageClick = (property) => {
-    console.log('Opening message dialog for:', property);
+    console.log('Opening message modal for:', property);
     setSelectedProperty(property);
-    setDialogConfig({
-      open: true,
-      type: 'message',
-      message: generateMessage(property)
-    });
-  };
-
-  const handleCloseDialog = () => {
-    setDialogConfig({ ...dialogConfig, open: false });
-    setSelectedProperty(null);
+    setOutreachMessage(generateMessage(property));
+    setMessageModalOpen(true);
   };
 
   const handleMessageChange = (e) => {
-    setDialogConfig({ ...dialogConfig, message: e.target.value });
+    setOutreachMessage(e.target.value);
   };
 
   const handleCopyMessage = () => {
-    navigator.clipboard.writeText(dialogConfig.message)
+    navigator.clipboard.writeText(outreachMessage)
       .then(() => {
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 3000);
@@ -202,13 +189,17 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
           />
         </Container>
 
-        <SimpleDialog
-          open={dialogConfig.open}
-          onClose={handleCloseDialog}
-          title={dialogConfig.type === 'roi' ? 'ROI Analysis' : 'Generate Outreach Message'}
+        <ROIModal
+          open={roiModalOpen}
+          onClose={() => setRoiModalOpen(false)}
           property={selectedProperty}
-          type={dialogConfig.type}
-          message={dialogConfig.message}
+        />
+
+        <MessageModal
+          open={messageModalOpen}
+          onClose={() => setMessageModalOpen(false)}
+          property={selectedProperty}
+          message={outreachMessage}
           onMessageChange={handleMessageChange}
           onCopy={handleCopyMessage}
         />
