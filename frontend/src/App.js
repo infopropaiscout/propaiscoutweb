@@ -11,7 +11,113 @@ import { Snackbar, Alert, LinearProgress, Typography, Paper } from '@mui/materia
 import { propertyService } from './services/propertyService';
 import { API_CONFIG } from './config/api';
 
-// ... rest of your theme configuration ...
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#2563EB',
+      light: '#60A5FA',
+      dark: '#1D4ED8',
+    },
+    secondary: {
+      main: '#EC4899',
+      light: '#F9A8D4',
+      dark: '#BE185D',
+    },
+    background: {
+      default: '#F8FAFC',
+      paper: '#FFFFFF',
+    },
+    success: {
+      main: '#10B981',
+    },
+    warning: {
+      main: '#F59E0B',
+    },
+    error: {
+      main: '#EF4444',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 700,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 600,
+    },
+    h5: {
+      fontWeight: 600,
+    },
+    h6: {
+      fontWeight: 600,
+    },
+    button: {
+      textTransform: 'none',
+      fontWeight: 500,
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          padding: '8px 16px',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-1px)',
+          },
+        },
+        contained: {
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          '&:hover': {
+            boxShadow: '0 4px 6px rgba(0,0,0,0.12)',
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          boxShadow: '0 4px 6px rgba(0,0,0,0.02), 0 1px 3px rgba(0,0,0,0.05)',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            boxShadow: '0 6px 12px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.06)',
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 8,
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+            },
+            '&.Mui-focused': {
+              boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+            },
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 6,
+        },
+      },
+    },
+  },
+});
 
 const queryClient = new QueryClient();
 
