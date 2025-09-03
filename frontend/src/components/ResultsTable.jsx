@@ -31,84 +31,103 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import MessageIcon from '@mui/icons-material/Message';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-const ResultsTable = ({ results = [], isLoading, onExport }) => {
+function PropertyROIDialog({ open, onClose, property }) {
+  if (!property) return null;
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>ROI Analysis - {property.address}</DialogTitle>
+      <DialogContent>
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="h6" gutterBottom>Investment Details</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={4}>
+              <Typography variant="subtitle2">Purchase Price</Typography>
+              <Typography variant="h6">{formatCurrency(property.price)}</Typography>
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle2">Estimated Repairs</Typography>
+              <Typography variant="h6">{formatCurrency(property.estimated_repairs)}</Typography>
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle2">Potential ARV</Typography>
+              <Typography variant="h6">{formatCurrency(property.arv)}</Typography>
+            </Grid>
+          </Grid>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function PropertyMessageDialog({ open, onClose, property }) {
+  if (!property) return null;
+
+  const [message, setMessage] = useState(
+    `Hi,\n\nI noticed your property at ${property?.address} has been on the market for ${property?.days_on_market} days. ` +
+    `I'm a local investor interested in making a quick, all-cash offer.\n\n` +
+    `Would you be open to discussing a potential offer of ${new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(property?.price * 0.85)}?\n\n` +
+    `Best regards,\n[Your name]`
+  );
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message);
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Generate Message - {property.address}</DialogTitle>
+      <DialogContent>
+        <TextField
+          fullWidth
+          multiline
+          rows={8}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          sx={{ mt: 2 }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCopy} startIcon={<ContentCopyIcon />}>
+          Copy Message
+        </Button>
+        <Button onClick={onClose}>Close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function ResultsTable({ results = [], isLoading, onExport }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState('motivation_score');
   const [order, setOrder] = useState('desc');
   
   // Dialog states
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const [roiDialogOpen, setRoiDialogOpen] = useState(false);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [outreachMessage, setOutreachMessage] = useState('');
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
-
-  const handleROIClick = (property) => {
-    console.log('ROI Click:', property);
-    setSelectedProperty(property);
-    setRoiDialogOpen(true);
-  };
-
-  const handleMessageClick = (property) => {
-    console.log('Message Click:', property);
-    setSelectedProperty(property);
-    generateMessage(property);
-    setMessageDialogOpen(true);
-  };
-
-  const handleCopyMessage = () => {
-    navigator.clipboard.writeText(outreachMessage);
-  };
-
-  const generateMessage = (property) => {
-    const message = `Hi,
-
-I noticed your property at ${property.address} has been on the market for ${property.days_on_market} days${property.price_drop ? ' and recently had a price reduction' : ''}.
-
-I'm a local investor specializing in quick, hassle-free transactions, and I may be able to offer you a faster exit. Based on my analysis:
-
-- Current asking price: ${formatCurrency(property.price)}
-- Quick offer suggestion: ${formatCurrency(property.price * 0.85)}
-- Closing timeline: As quick as 14 days
-
-Key Benefits of Working with Me:
-- No real estate commissions
-- No repairs or renovations needed
-- Flexible closing timeline
-- All cash offer
-- Quick and simple process
-
-Would you be open to a conversation about your property? I can be flexible with the closing timeline and terms to meet your needs.
-
-Best regards,
-[Your name]
-
-P.S. I'm ready to move forward quickly if this opportunity interests you.`;
-
-    setOutreachMessage(message);
-  };
-
-  const sortedResults = React.useMemo(() => {
-    if (!Array.isArray(results)) {
-      console.error('Results is not an array:', results);
-      return [];
-    }
-    
-    const comparator = (a, b) => {
-      if (!a || !b) return 0;
-      if (order === 'desc') {
-        return (b[orderBy] || 0) - (a[orderBy] || 0);
-      }
-      return (a[orderBy] || 0) - (b[orderBy] || 0);
-    };
-    return [...results].sort(comparator);
-  }, [results, order, orderBy]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -127,47 +146,46 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
     }).format(value);
   };
 
+  const handleROIClick = (property) => {
+    console.log('Opening ROI dialog for:', property);
+    setSelectedProperty(property);
+    setRoiDialogOpen(true);
+  };
+
+  const handleMessageClick = (property) => {
+    console.log('Opening message dialog for:', property);
+    setSelectedProperty(property);
+    setMessageDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
-      <Card elevation={2} sx={{ borderRadius: 3 }}>
-        <CardContent sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={40} sx={{ mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            Searching for properties...
-          </Typography>
-        </CardContent>
-      </Card>
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
-  if (!Array.isArray(results) || results.length === 0) {
+  if (!results.length) {
     return (
-      <Card elevation={2} sx={{ borderRadius: 3 }}>
-        <CardContent sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No Properties Found
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Try adjusting your search criteria or exploring different zip codes.
-          </Typography>
-        </CardContent>
-      </Card>
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography>No properties found</Typography>
+      </Box>
     );
   }
 
   return (
-    <>
-      <Card elevation={2} sx={{ borderRadius: 3 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+    <Box>
+      <Card>
+        <CardContent>
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="h6">
               {results.length} Properties Found
             </Typography>
             <Button
-              variant="outlined"
               startIcon={<DownloadIcon />}
               onClick={onExport}
-              sx={{ borderRadius: 2 }}
+              variant="outlined"
             >
               Export Results
             </Button>
@@ -177,7 +195,7 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Property Details</TableCell>
+                  <TableCell>Property</TableCell>
                   <TableCell>
                     <TableSortLabel
                       active={orderBy === 'price'}
@@ -196,37 +214,23 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
                       Motivation Score
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell>
-                    <TableSortLabel
-                      active={orderBy === 'days_on_market'}
-                      direction={orderBy === 'days_on_market' ? order : 'asc'}
-                      onClick={() => handleSort('days_on_market')}
-                    >
-                      Days on Market
-                    </TableSortLabel>
-                  </TableCell>
+                  <TableCell>Days on Market</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {sortedResults
+                {results
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((property) => (
                     <TableRow key={property.id}>
                       <TableCell>
-                        <Box>
-                          <Typography variant="subtitle2">
-                            {property.address}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {property.bedrooms} beds • {property.bathrooms} baths • {property.square_feet} sqft
-                          </Typography>
-                        </Box>
+                        <Typography variant="subtitle2">{property.address}</Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {property.bedrooms} beds • {property.bathrooms} baths
+                        </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="subtitle2">
-                          {formatCurrency(property.price)}
-                        </Typography>
+                        <Typography>{formatCurrency(property.price)}</Typography>
                         {property.price_drop > 0 && (
                           <Typography variant="body2" color="error">
                             ↓ {formatCurrency(property.price_drop)}
@@ -236,22 +240,13 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
                       <TableCell>
                         <Chip
                           label={`${property.motivation_score}%`}
-                          color={property.motivation_score >= 80 ? 'success' : property.motivation_score >= 60 ? 'warning' : 'error'}
+                          color={property.motivation_score >= 80 ? 'success' : 'warning'}
                           size="small"
                         />
-                        {property.score_factors && property.score_factors.length > 0 && (
-                          <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
-                            {property.score_factors[0]}
-                          </Typography>
-                        )}
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {property.days_on_market} days
-                        </Typography>
-                      </TableCell>
+                      <TableCell>{property.days_on_market} days</TableCell>
                       <TableCell align="right">
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                           <Button
                             variant="contained"
                             size="small"
@@ -268,14 +263,6 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
                           >
                             Message
                           </Button>
-                          <Tooltip title="View Property">
-                            <IconButton
-                              size="small"
-                              onClick={() => window.open(property.url, '_blank')}
-                            >
-                              <VisibilityIcon />
-                            </IconButton>
-                          </Tooltip>
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -285,7 +272,6 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
           </TableContainer>
 
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
             component="div"
             count={results.length}
             rowsPerPage={rowsPerPage}
@@ -296,176 +282,20 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
         </CardContent>
       </Card>
 
-      {/* ROI Dialog */}
-      <Dialog 
-        open={roiDialogOpen} 
+      {/* Dialogs */}
+      <PropertyROIDialog
+        open={roiDialogOpen}
         onClose={() => setRoiDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          ROI Analysis
-          {selectedProperty && (
-            <Typography variant="subtitle2" color="text.secondary">
-              {selectedProperty.address}
-            </Typography>
-          )}
-        </DialogTitle>
-        <DialogContent>
-          {selectedProperty && (
-            <Grid container spacing={3} sx={{ mt: 1 }}>
-              <Grid item xs={12}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.50' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Investment Summary
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Purchase Price
-                      </Typography>
-                      <Typography variant="h6">
-                        {formatCurrency(selectedProperty.price)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Estimated Repairs
-                      </Typography>
-                      <Typography variant="h6">
-                        {formatCurrency(selectedProperty.estimated_repairs)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Total Investment
-                      </Typography>
-                      <Typography variant="h6">
-                        {formatCurrency(selectedProperty.price + selectedProperty.estimated_repairs)}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Grid>
+        property={selectedProperty}
+      />
 
-              <Grid item xs={12}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.50' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Potential Returns
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        After Repair Value (ARV)
-                      </Typography>
-                      <Typography variant="h6">
-                        {formatCurrency(selectedProperty.arv)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Potential Profit
-                      </Typography>
-                      <Typography variant="h6" color="success.main">
-                        {formatCurrency(selectedProperty.arv - (selectedProperty.price + selectedProperty.estimated_repairs))}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        ROI
-                      </Typography>
-                      <Typography variant="h6" color="success.main">
-                        {(((selectedProperty.arv - (selectedProperty.price + selectedProperty.estimated_repairs)) / 
-                          (selectedProperty.price + selectedProperty.estimated_repairs)) * 100).toFixed(1)}%
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Grid>
-            </Grid>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRoiDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Message Dialog */}
-      <Dialog 
-        open={messageDialogOpen} 
+      <PropertyMessageDialog
+        open={messageDialogOpen}
         onClose={() => setMessageDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          Generate Outreach Message
-          {selectedProperty && (
-            <Typography variant="subtitle2" color="text.secondary">
-              {selectedProperty.address}
-            </Typography>
-          )}
-        </DialogTitle>
-        <DialogContent>
-          {selectedProperty && (
-            <Box sx={{ mt: 2 }}>
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: 'grey.50',
-                  borderRadius: 2,
-                  mb: 2
-                }}
-              >
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Property Details:
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={4}>
-                    <Typography variant="body2">
-                      Price: {formatCurrency(selectedProperty.price)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Typography variant="body2">
-                      Days on Market: {selectedProperty.days_on_market}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Typography variant="body2">
-                      Motivation Score: {selectedProperty.motivation_score}%
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Paper>
-              
-              <TextField
-                fullWidth
-                multiline
-                rows={12}
-                value={outreachMessage}
-                onChange={(e) => setOutreachMessage(e.target.value)}
-                variant="outlined"
-                sx={{ mb: 2 }}
-              />
-              
-              <Button
-                startIcon={<ContentCopyIcon />}
-                onClick={handleCopyMessage}
-                variant="contained"
-                color="primary"
-              >
-                Copy Message
-              </Button>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMessageDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-    </>
+        property={selectedProperty}
+      />
+    </Box>
   );
-};
+}
 
 export default ResultsTable;
