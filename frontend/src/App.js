@@ -8,12 +8,17 @@ import {
   CssBaseline,
   createTheme,
   ThemeProvider,
-  Divider
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Grid
 } from '@mui/material';
 import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
-import TestDialog from './components/TestDialog';
 import { propertyService } from './services/propertyService';
 
 const theme = createTheme({
@@ -31,6 +36,11 @@ function App() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Dialog states
+  const [roiDialogOpen, setRoiDialogOpen] = useState(false);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
   const handleSearch = async (filters) => {
     setLoading(true);
@@ -83,7 +93,6 @@ function App() {
   };
 
   const handleExport = () => {
-    // Convert properties to CSV and download
     const headers = ['Address', 'Price', 'Days on Market', 'Motivation Score'];
     const csvContent = properties.map(p => 
       [p.address, p.price, p.days_on_market, p.motivation_score].join(',')
@@ -99,25 +108,31 @@ function App() {
     window.URL.revokeObjectURL(url);
   };
 
+  const handleROIClick = (property) => {
+    console.log('ROI button clicked for:', property);
+    setSelectedProperty(property);
+    setRoiDialogOpen(true);
+  };
+
+  const handleMessageClick = (property) => {
+    console.log('Message button clicked for:', property);
+    setSelectedProperty(property);
+    setMessageDialogOpen(true);
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        {/* Test Dialog Section */}
-        <Box sx={{ mb: 4, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom color="primary">
-            Dialog Test Section
-          </Typography>
-          <Typography variant="body2" gutterBottom color="text.secondary">
-            This section tests basic dialog functionality
-          </Typography>
-          <TestDialog />
-        </Box>
-        
-        <Divider sx={{ my: 4 }} />
-        
-        {/* Main App Section */}
         <Box sx={{ my: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom>
             PropAI Scout
@@ -142,9 +157,102 @@ function App() {
               results={properties}
               isLoading={loading}
               onExport={handleExport}
+              onROIClick={handleROIClick}
+              onMessageClick={handleMessageClick}
             />
           )}
         </Box>
+
+        {/* ROI Dialog */}
+        <Dialog 
+          open={roiDialogOpen} 
+          onClose={() => setRoiDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            ROI Analysis
+            {selectedProperty && (
+              <Typography variant="subtitle2" color="text.secondary">
+                {selectedProperty.address}
+              </Typography>
+            )}
+          </DialogTitle>
+          <DialogContent>
+            {selectedProperty && (
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid item xs={12} sm={4}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Purchase Price
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatCurrency(selectedProperty.price)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Estimated Repairs
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatCurrency(selectedProperty.estimated_repairs)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Potential ARV
+                  </Typography>
+                  <Typography variant="h6">
+                    {formatCurrency(selectedProperty.arv)}
+                  </Typography>
+                </Grid>
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setRoiDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Message Dialog */}
+        <Dialog 
+          open={messageDialogOpen} 
+          onClose={() => setMessageDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            Generate Message
+            {selectedProperty && (
+              <Typography variant="subtitle2" color="text.secondary">
+                {selectedProperty.address}
+              </Typography>
+            )}
+          </DialogTitle>
+          <DialogContent>
+            {selectedProperty && (
+              <TextField
+                fullWidth
+                multiline
+                rows={8}
+                defaultValue={`Hi,
+
+I noticed your property at ${selectedProperty.address} has been on the market for ${selectedProperty.days_on_market} days. I'm a local investor interested in making a quick, all-cash offer.
+
+Would you be open to discussing a potential offer of ${formatCurrency(selectedProperty.price * 0.85)}?
+
+Best regards,
+[Your name]`}
+                sx={{ mt: 2 }}
+              />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => navigator.clipboard.writeText(document.querySelector('textarea').value)}>
+              Copy Message
+            </Button>
+            <Button onClick={() => setMessageDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </ThemeProvider>
   );

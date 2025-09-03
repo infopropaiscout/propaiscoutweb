@@ -16,112 +16,18 @@ import {
   Tooltip,
   TablePagination,
   TableSortLabel,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Grid,
-  Paper
+  CircularProgress
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import MessageIcon from '@mui/icons-material/Message';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-function PropertyROIDialog({ open, onClose, property }) {
-  if (!property) return null;
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>ROI Analysis - {property.address}</DialogTitle>
-      <DialogContent>
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="h6" gutterBottom>Investment Details</Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={4}>
-              <Typography variant="subtitle2">Purchase Price</Typography>
-              <Typography variant="h6">{formatCurrency(property.price)}</Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="subtitle2">Estimated Repairs</Typography>
-              <Typography variant="h6">{formatCurrency(property.estimated_repairs)}</Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="subtitle2">Potential ARV</Typography>
-              <Typography variant="h6">{formatCurrency(property.arv)}</Typography>
-            </Grid>
-          </Grid>
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
-
-function PropertyMessageDialog({ open, onClose, property }) {
-  if (!property) return null;
-
-  const [message, setMessage] = useState(
-    `Hi,\n\nI noticed your property at ${property?.address} has been on the market for ${property?.days_on_market} days. ` +
-    `I'm a local investor interested in making a quick, all-cash offer.\n\n` +
-    `Would you be open to discussing a potential offer of ${new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(property?.price * 0.85)}?\n\n` +
-    `Best regards,\n[Your name]`
-  );
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(message);
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Generate Message - {property.address}</DialogTitle>
-      <DialogContent>
-        <TextField
-          fullWidth
-          multiline
-          rows={8}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          sx={{ mt: 2 }}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleCopy} startIcon={<ContentCopyIcon />}>
-          Copy Message
-        </Button>
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
-
-function ResultsTable({ results = [], isLoading, onExport }) {
+function ResultsTable({ results = [], isLoading, onExport, onROIClick, onMessageClick }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState('motivation_score');
   const [order, setOrder] = useState('desc');
-  
-  // Dialog states
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [roiDialogOpen, setRoiDialogOpen] = useState(false);
-  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -144,18 +50,6 @@ function ResultsTable({ results = [], isLoading, onExport }) {
       currency: 'USD',
       maximumFractionDigits: 0
     }).format(value);
-  };
-
-  const handleROIClick = (property) => {
-    console.log('Opening ROI dialog for:', property);
-    setSelectedProperty(property);
-    setRoiDialogOpen(true);
-  };
-
-  const handleMessageClick = (property) => {
-    console.log('Opening message dialog for:', property);
-    setSelectedProperty(property);
-    setMessageDialogOpen(true);
   };
 
   if (isLoading) {
@@ -250,7 +144,10 @@ function ResultsTable({ results = [], isLoading, onExport }) {
                           <Button
                             variant="contained"
                             size="small"
-                            onClick={() => handleROIClick(property)}
+                            onClick={() => {
+                              console.log('ROI button clicked for property:', property);
+                              onROIClick(property);
+                            }}
                             startIcon={<TrendingUpIcon />}
                           >
                             ROI
@@ -258,7 +155,10 @@ function ResultsTable({ results = [], isLoading, onExport }) {
                           <Button
                             variant="contained"
                             size="small"
-                            onClick={() => handleMessageClick(property)}
+                            onClick={() => {
+                              console.log('Message button clicked for property:', property);
+                              onMessageClick(property);
+                            }}
                             startIcon={<MessageIcon />}
                           >
                             Message
@@ -281,19 +181,6 @@ function ResultsTable({ results = [], isLoading, onExport }) {
           />
         </CardContent>
       </Card>
-
-      {/* Dialogs */}
-      <PropertyROIDialog
-        open={roiDialogOpen}
-        onClose={() => setRoiDialogOpen(false)}
-        property={selectedProperty}
-      />
-
-      <PropertyMessageDialog
-        open={messageDialogOpen}
-        onClose={() => setMessageDialogOpen(false)}
-        property={selectedProperty}
-      />
     </Box>
   );
 }
