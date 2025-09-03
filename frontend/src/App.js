@@ -6,42 +6,32 @@ import Container from '@mui/material/Container';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
 import Header from './components/Header';
-import { Snackbar, Alert, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Grid, Paper, TextField } from '@mui/material';
-import { propertyService } from './services/propertyService';
+import { 
+  Snackbar, 
+  Alert, 
+  LinearProgress, 
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Grid,
+  Paper,
+  TextField
+} from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { propertyService } from './services/propertyService';
 
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
       main: '#2563EB',
-      light: '#60A5FA',
-      dark: '#1D4ED8',
-    },
-    secondary: {
-      main: '#EC4899',
-      light: '#F9A8D4',
-      dark: '#BE185D',
     },
     background: {
       default: '#F8FAFC',
-      paper: '#FFFFFF',
     },
-    success: {
-      main: '#10B981',
-    },
-    warning: {
-      main: '#F59E0B',
-    },
-    error: {
-      main: '#EF4444',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-  },
-  shape: {
-    borderRadius: 12,
   },
 });
 
@@ -51,7 +41,7 @@ function App() {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [roiDialogOpen, setRoiDialogOpen] = useState(false);
-  const [outreachDialogOpen, setOutreachDialogOpen] = useState(false);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [outreachMessage, setOutreachMessage] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -110,7 +100,7 @@ function App() {
     setSelectedProperty(property);
     const message = generateMessage(property);
     setOutreachMessage(message);
-    setOutreachDialogOpen(true);
+    setMessageDialogOpen(true);
   };
 
   const generateMessage = (property) => {
@@ -267,10 +257,10 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
           )}
         </Dialog>
 
-        {/* Outreach Message Dialog */}
+        {/* Message Dialog */}
         <Dialog 
-          open={outreachDialogOpen} 
-          onClose={() => setOutreachDialogOpen(false)}
+          open={messageDialogOpen} 
+          onClose={() => setMessageDialogOpen(false)}
           maxWidth="md"
           fullWidth
         >
@@ -336,7 +326,7 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
                 </Box>
               </DialogContent>
               <DialogActions>
-                <Button onClick={() => setOutreachDialogOpen(false)}>Close</Button>
+                <Button onClick={() => setMessageDialogOpen(false)}>Close</Button>
               </DialogActions>
             </>
           )}
