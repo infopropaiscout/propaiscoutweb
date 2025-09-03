@@ -44,6 +44,7 @@ const SearchForm = ({ onSearch }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedZips, setSelectedZips] = useState([]);
   const [zipInput, setZipInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,18 +65,28 @@ const SearchForm = ({ onSearch }) => {
     setSelectedZips(selectedZips.filter(z => z !== zip));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (selectedZips.length === 0) return;
 
-    onSearch({
-      ...formData,
-      zip_codes: selectedZips,
-      min_price: formData.min_price ? parseFloat(formData.min_price) : null,
-      max_price: formData.max_price ? parseFloat(formData.max_price) : null,
-      max_days_on_market: formData.max_days_on_market ? parseInt(formData.max_days_on_market) : null,
-      min_motivation_score: formData.min_motivation_score ? parseInt(formData.min_motivation_score) : 0,
-    });
+    try {
+      setIsSubmitting(true);
+      const searchData = {
+        ...formData,
+        zip_codes: selectedZips,
+        min_price: formData.min_price ? parseFloat(formData.min_price) : null,
+        max_price: formData.max_price ? parseFloat(formData.max_price) : null,
+        max_days_on_market: formData.max_days_on_market ? parseInt(formData.max_days_on_market) : null,
+        min_motivation_score: formData.min_motivation_score ? parseInt(formData.min_motivation_score) : 0,
+      };
+
+      console.log('Submitting search with data:', searchData);
+      await onSearch(searchData);
+    } catch (error) {
+      console.error('Error during search:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -284,7 +295,7 @@ const SearchForm = ({ onSearch }) => {
               variant="contained"
               size="large"
               startIcon={<SearchIcon />}
-              disabled={selectedZips.length === 0}
+              disabled={selectedZips.length === 0 || isSubmitting}
               sx={{ 
                 mt: 2,
                 height: 56,
@@ -298,7 +309,7 @@ const SearchForm = ({ onSearch }) => {
                 },
               }}
             >
-              Search Properties
+              {isSubmitting ? 'Searching...' : 'Search Properties'}
             </Button>
           </Stack>
         </form>
