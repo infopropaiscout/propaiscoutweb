@@ -7,11 +7,13 @@ import {
   Alert,
   CssBaseline,
   createTheme,
-  ThemeProvider
+  ThemeProvider,
+  Divider
 } from '@mui/material';
 import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
+import TestDialog from './components/TestDialog';
 import { propertyService } from './services/propertyService';
 
 const theme = createTheme({
@@ -102,6 +104,20 @@ function App() {
       <CssBaseline />
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        {/* Test Dialog Section */}
+        <Box sx={{ mb: 4, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            Dialog Test Section
+          </Typography>
+          <Typography variant="body2" gutterBottom color="text.secondary">
+            This section tests basic dialog functionality
+          </Typography>
+          <TestDialog />
+        </Box>
+        
+        <Divider sx={{ my: 4 }} />
+        
+        {/* Main App Section */}
         <Box sx={{ my: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom>
             PropAI Scout
