@@ -17,23 +17,95 @@ import {
   TablePagination,
   TableSortLabel,
   Stack,
-  CircularProgress
+  CircularProgress,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Grid,
+  Paper,
+  TextField,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import MessageIcon from '@mui/icons-material/Message';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DialogPortal from './DialogPortal';
 
-const ResultsTable = ({ results = [], isLoading, onExport, onROIClick, onMessageClick }) => {
+const ResultsTable = ({ results = [], isLoading, onExport }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState('motivation_score');
   const [order, setOrder] = useState('desc');
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [roiDialogOpen, setRoiDialogOpen] = useState(false);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
+  };
+
+  const handleROIClick = (property) => {
+    console.log('Opening ROI dialog for:', property);
+    setSelectedProperty(property);
+    setRoiDialogOpen(true);
+  };
+
+  const handleMessageClick = (property) => {
+    console.log('Opening message dialog for:', property);
+    setSelectedProperty(property);
+    const generatedMessage = generateMessage(property);
+    setMessage(generatedMessage);
+    setMessageDialogOpen(true);
+  };
+
+  const handleCopyMessage = () => {
+    navigator.clipboard.writeText(message)
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 3000);
+      })
+      .catch(err => console.error('Failed to copy:', err));
+  };
+
+  const generateMessage = (property) => {
+    return `Hi,
+
+I noticed your property at ${property.address} has been on the market for ${property.days_on_market} days${property.price_drop ? ' and recently had a price reduction' : ''}.
+
+I'm a local investor specializing in quick, hassle-free transactions, and I may be able to offer you a faster exit. Based on my analysis:
+
+- Current asking price: ${formatCurrency(property.price)}
+- Quick offer suggestion: ${formatCurrency(property.price * 0.85)}
+- Closing timeline: As quick as 14 days
+
+Key Benefits of Working with Me:
+- No real estate commissions
+- No repairs or renovations needed
+- Flexible closing timeline
+- All cash offer
+- Quick and simple process
+
+Would you be open to a conversation about your property? I can be flexible with the closing timeline and terms to meet your needs.
+
+Best regards,
+[Your name]
+
+P.S. I'm ready to move forward quickly if this opportunity interests you.`;
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
   };
 
   const sortedResults = React.useMemo(() => {
@@ -90,144 +162,291 @@ const ResultsTable = ({ results = [], isLoading, onExport, onROIClick, onMessage
   }
 
   return (
-    <Card elevation={2} sx={{ borderRadius: 3 }}>
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {results.length} Properties Found
-          </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={onExport}
-            sx={{ borderRadius: 2 }}
-          >
-            Export Results
-          </Button>
-        </Box>
+    <>
+      <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {results.length} Properties Found
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={onExport}
+              sx={{ borderRadius: 2 }}
+            >
+              Export Results
+            </Button>
+          </Box>
 
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Property Details</TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'price'}
-                    direction={orderBy === 'price' ? order : 'asc'}
-                    onClick={() => handleSort('price')}
-                  >
-                    Price
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'motivation_score'}
-                    direction={orderBy === 'motivation_score' ? order : 'asc'}
-                    onClick={() => handleSort('motivation_score')}
-                  >
-                    Motivation Score
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === 'days_on_market'}
-                    direction={orderBy === 'days_on_market' ? order : 'asc'}
-                    onClick={() => handleSort('days_on_market')}
-                  >
-                    Days on Market
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedResults
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((property) => (
-                  <TableRow key={property.id}>
-                    <TableCell>
-                      <Box>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Property Details</TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={orderBy === 'price'}
+                      direction={orderBy === 'price' ? order : 'asc'}
+                      onClick={() => handleSort('price')}
+                    >
+                      Price
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={orderBy === 'motivation_score'}
+                      direction={orderBy === 'motivation_score' ? order : 'asc'}
+                      onClick={() => handleSort('motivation_score')}
+                    >
+                      Motivation Score
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={orderBy === 'days_on_market'}
+                      direction={orderBy === 'days_on_market' ? order : 'asc'}
+                      onClick={() => handleSort('days_on_market')}
+                    >
+                      Days on Market
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sortedResults
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((property) => (
+                    <TableRow key={property.id}>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="subtitle2">
+                            {property.address}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {property.bedrooms} beds • {property.bathrooms} baths • {property.square_feet} sqft
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
                         <Typography variant="subtitle2">
-                          {property.address}
+                          {formatCurrency(property.price)}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {property.bedrooms} beds • {property.bathrooms} baths • {property.square_feet} sqft
+                        {property.price_drop > 0 && (
+                          <Typography variant="body2" color="error">
+                            ↓ {formatCurrency(property.price_drop)}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={`${property.motivation_score}%`}
+                          color={property.motivation_score >= 80 ? 'success' : property.motivation_score >= 60 ? 'warning' : 'error'}
+                          size="small"
+                        />
+                        {property.score_factors && property.score_factors.length > 0 && (
+                          <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {property.score_factors[0]}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {property.days_on_market} days
                         </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="subtitle2">
-                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(property.price)}
-                      </Typography>
-                      {property.price_drop > 0 && (
-                        <Typography variant="body2" color="error">
-                          ↓ {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(property.price_drop)}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={`${property.motivation_score}%`}
-                        color={property.motivation_score >= 80 ? 'success' : property.motivation_score >= 60 ? 'warning' : 'error'}
-                        size="small"
-                      />
-                      {property.score_factors && property.score_factors.length > 0 && (
-                        <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {property.score_factors[0]}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {property.days_on_market} days
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Tooltip title="View ROI Analysis">
-                          <IconButton
-                            size="small"
-                            onClick={() => onROIClick(property)}
-                          >
-                            <TrendingUpIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Generate Outreach Message">
-                          <IconButton
-                            size="small"
-                            onClick={() => onMessageClick(property)}
-                          >
-                            <MessageIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="View Property">
-                          <IconButton
-                            size="small"
-                            onClick={() => window.open(property.url, '_blank')}
-                          >
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <Tooltip title="View ROI Analysis">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleROIClick(property)}
+                            >
+                              <TrendingUpIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Generate Outreach Message">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleMessageClick(property)}
+                            >
+                              <MessageIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="View Property">
+                            <IconButton
+                              size="small"
+                              onClick={() => window.open(property.url, '_blank')}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={results.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </CardContent>
-    </Card>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={results.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </CardContent>
+      </Card>
+
+      {/* ROI Dialog */}
+      <DialogPortal
+        open={roiDialogOpen}
+        onClose={() => setRoiDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        {selectedProperty && (
+          <>
+            <DialogTitle>
+              ROI Analysis
+              <Typography variant="subtitle2" color="text.secondary">
+                {selectedProperty.address}
+              </Typography>
+            </DialogTitle>
+            <DialogContent>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.50' }}>
+                    <Typography variant="h6" gutterBottom>
+                      Investment Summary
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={4}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Purchase Price
+                        </Typography>
+                        <Typography variant="h6">
+                          {formatCurrency(selectedProperty.price)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Estimated Repairs
+                        </Typography>
+                        <Typography variant="h6">
+                          {formatCurrency(selectedProperty.estimated_repairs || 25000)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Total Investment
+                        </Typography>
+                        <Typography variant="h6">
+                          {formatCurrency(selectedProperty.price + (selectedProperty.estimated_repairs || 25000))}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRoiDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </DialogPortal>
+
+      {/* Message Dialog */}
+      <DialogPortal
+        open={messageDialogOpen}
+        onClose={() => setMessageDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        {selectedProperty && (
+          <>
+            <DialogTitle>
+              Generate Outreach Message
+              <Typography variant="subtitle2" color="text.secondary">
+                {selectedProperty.address}
+              </Typography>
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2 }}>
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    p: 2, 
+                    bgcolor: 'grey.50',
+                    borderRadius: 2,
+                    mb: 2
+                  }}
+                >
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Property Details:
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="body2">
+                        Price: {formatCurrency(selectedProperty.price)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="body2">
+                        Days on Market: {selectedProperty.days_on_market}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="body2">
+                        Motivation Score: {selectedProperty.motivation_score}%
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+                
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={12}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  variant="outlined"
+                  sx={{ mb: 2 }}
+                />
+                
+                <Button
+                  startIcon={<ContentCopyIcon />}
+                  onClick={handleCopyMessage}
+                  variant="contained"
+                  color="primary"
+                >
+                  Copy Message
+                </Button>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setMessageDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </DialogPortal>
+
+      <Snackbar
+        open={copySuccess}
+        autoHideDuration={3000}
+        onClose={() => setCopySuccess(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" variant="filled">
+          Message copied to clipboard!
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
