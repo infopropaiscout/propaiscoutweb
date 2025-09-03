@@ -6,8 +6,9 @@ import Container from '@mui/material/Container';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
 import Header from './components/Header';
-import { Snackbar, Alert, LinearProgress } from '@mui/material';
+import { Snackbar, Alert, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Grid, Paper, TextField } from '@mui/material';
 import { propertyService } from './services/propertyService';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const theme = createTheme({
   palette: {
@@ -38,82 +39,9 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 700,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 500,
-    },
   },
   shape: {
     borderRadius: 12,
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          padding: '8px 16px',
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            transform: 'translateY(-1px)',
-          },
-        },
-        contained: {
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          '&:hover': {
-            boxShadow: '0 4px 6px rgba(0,0,0,0.12)',
-          },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-          boxShadow: '0 4px 6px rgba(0,0,0,0.02), 0 1px 3px rgba(0,0,0,0.05)',
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            boxShadow: '0 6px 12px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.06)',
-          },
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
-            },
-            '&.Mui-focused': {
-              boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-            },
-          },
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: 6,
-        },
-      },
-    },
   },
 });
 
@@ -121,6 +49,11 @@ function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [roiDialogOpen, setRoiDialogOpen] = useState(false);
+  const [outreachDialogOpen, setOutreachDialogOpen] = useState(false);
+  const [outreachMessage, setOutreachMessage] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const handleSearch = async (filters) => {
     setIsLoading(true);
@@ -139,7 +72,6 @@ function App() {
 
   const handleExport = async () => {
     try {
-      // Create CSV content
       const headers = ['Address', 'Price', 'Motivation Score', 'Days on Market', 'ROI'];
       const csvContent = [
         headers.join(','),
@@ -152,7 +84,6 @@ function App() {
         ].join(','))
       ].join('\n');
 
-      // Create and download file
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -166,6 +97,66 @@ function App() {
       console.error('Export error:', error);
       showNotification(error.message || 'Error exporting data. Please try again.', 'error');
     }
+  };
+
+  const handleROIClick = (property) => {
+    console.log('Opening ROI dialog for:', property);
+    setSelectedProperty(property);
+    setRoiDialogOpen(true);
+  };
+
+  const handleMessageClick = (property) => {
+    console.log('Opening message dialog for:', property);
+    setSelectedProperty(property);
+    const message = generateMessage(property);
+    setOutreachMessage(message);
+    setOutreachDialogOpen(true);
+  };
+
+  const generateMessage = (property) => {
+    return `Hi,
+
+I noticed your property at ${property.address} has been on the market for ${property.days_on_market} days${property.price_drop ? ' and recently had a price reduction' : ''}.
+
+I'm a local investor specializing in quick, hassle-free transactions, and I may be able to offer you a faster exit. Based on my analysis:
+
+- Current asking price: ${formatCurrency(property.price)}
+- Quick offer suggestion: ${formatCurrency(property.price * 0.85)}
+- Closing timeline: As quick as 14 days
+
+Key Benefits of Working with Me:
+- No real estate commissions
+- No repairs or renovations needed
+- Flexible closing timeline
+- All cash offer
+- Quick and simple process
+
+Would you be open to a conversation about your property? I can be flexible with the closing timeline and terms to meet your needs.
+
+Best regards,
+[Your name]
+
+P.S. I'm ready to move forward quickly if this opportunity interests you.`;
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  const handleCopyMessage = () => {
+    navigator.clipboard.writeText(outreachMessage)
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 3000);
+      })
+      .catch(err => {
+        console.error('Failed to copy:', err);
+        showNotification('Failed to copy message', 'error');
+      });
   };
 
   const showNotification = (message, severity = 'info') => {
@@ -212,8 +203,145 @@ function App() {
             results={searchResults} 
             isLoading={isLoading} 
             onExport={handleExport}
+            onROIClick={handleROIClick}
+            onMessageClick={handleMessageClick}
           />
         </Container>
+
+        {/* ROI Dialog */}
+        <Dialog 
+          open={roiDialogOpen} 
+          onClose={() => setRoiDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedProperty && (
+            <>
+              <DialogTitle>
+                ROI Analysis
+                <Typography variant="subtitle2" color="text.secondary">
+                  {selectedProperty.address}
+                </Typography>
+              </DialogTitle>
+              <DialogContent>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.50' }}>
+                      <Typography variant="h6" gutterBottom>
+                        Investment Summary
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={4}>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Purchase Price
+                          </Typography>
+                          <Typography variant="h6">
+                            {formatCurrency(selectedProperty.price)}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Estimated Repairs
+                          </Typography>
+                          <Typography variant="h6">
+                            {formatCurrency(selectedProperty.estimated_repairs || 25000)}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Total Investment
+                          </Typography>
+                          <Typography variant="h6">
+                            {formatCurrency(selectedProperty.price + (selectedProperty.estimated_repairs || 25000))}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setRoiDialogOpen(false)}>Close</Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
+
+        {/* Outreach Message Dialog */}
+        <Dialog 
+          open={outreachDialogOpen} 
+          onClose={() => setOutreachDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedProperty && (
+            <>
+              <DialogTitle>
+                Generate Outreach Message
+                <Typography variant="subtitle2" color="text.secondary">
+                  {selectedProperty.address}
+                </Typography>
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ mt: 2 }}>
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      p: 2, 
+                      bgcolor: 'grey.50',
+                      borderRadius: 2,
+                      mb: 2
+                    }}
+                  >
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Property Details:
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <Typography variant="body2">
+                          Price: {formatCurrency(selectedProperty.price)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="body2">
+                          Days on Market: {selectedProperty.days_on_market}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="body2">
+                          Motivation Score: {selectedProperty.motivation_score}%
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                  
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={12}
+                    value={outreachMessage}
+                    onChange={(e) => setOutreachMessage(e.target.value)}
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                  />
+                  
+                  <Button
+                    startIcon={<ContentCopyIcon />}
+                    onClick={handleCopyMessage}
+                    variant="contained"
+                    color="primary"
+                  >
+                    Copy Message
+                  </Button>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setOutreachDialogOpen(false)}>Close</Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
+
         <Snackbar 
           open={notification.open} 
           autoHideDuration={6000} 
@@ -227,6 +355,17 @@ function App() {
             sx={{ width: '100%' }}
           >
             {notification.message}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar
+          open={copySuccess}
+          autoHideDuration={3000}
+          onClose={() => setCopySuccess(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity="success" variant="filled">
+            Message copied to clipboard!
           </Alert>
         </Snackbar>
       </Box>
