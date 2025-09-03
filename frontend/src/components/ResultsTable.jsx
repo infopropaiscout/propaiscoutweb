@@ -193,30 +193,30 @@ const ResultsTable = ({ results = [], isLoading, onExport, onROIClick, onMessage
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Tooltip title="View ROI Analysis">
-                          <IconButton
-                            size="small"
-                            onClick={() => onROIClick(property)}
-                          >
-                            <TrendingUpIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Generate Outreach Message">
-                          <IconButton
-                            size="small"
-                            onClick={() => onMessageClick(property)}
-                          >
-                            <MessageIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="View Property">
-                          <IconButton
-                            size="small"
-                            onClick={() => window.open(property.url, '_blank')}
-                          >
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          color="primary"
+                          onClick={() => onROIClick(property)}
+                          startIcon={<TrendingUpIcon />}
+                        >
+                          ROI
+                        </Button>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          color="primary"
+                          onClick={() => onMessageClick(property)}
+                          startIcon={<MessageIcon />}
+                        >
+                          Message
+                        </Button>
+                        <IconButton
+                          size="small"
+                          onClick={() => window.open(property.url, '_blank')}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
                       </Stack>
                     </TableCell>
                   </TableRow>

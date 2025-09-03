@@ -6,9 +6,8 @@ import Container from '@mui/material/Container';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
 import Header from './components/Header';
-import ROIModal from './components/ROIModal';
-import MessageModal from './components/MessageModal';
-import { Snackbar, Alert, LinearProgress } from '@mui/material';
+import { Snackbar, Alert, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Grid, Paper, TextField } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { propertyService } from './services/propertyService';
 
 const theme = createTheme({
@@ -28,8 +27,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const [roiModalOpen, setRoiModalOpen] = useState(false);
-  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [roiDialogOpen, setRoiDialogOpen] = useState(false);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [outreachMessage, setOutreachMessage] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -78,20 +77,16 @@ function App() {
   };
 
   const handleROIClick = (property) => {
-    console.log('Opening ROI modal for:', property);
+    console.log('Opening ROI dialog for:', property);
     setSelectedProperty(property);
-    setRoiModalOpen(true);
+    setRoiDialogOpen(true);
   };
 
   const handleMessageClick = (property) => {
-    console.log('Opening message modal for:', property);
+    console.log('Opening message dialog for:', property);
     setSelectedProperty(property);
     setOutreachMessage(generateMessage(property));
-    setMessageModalOpen(true);
-  };
-
-  const handleMessageChange = (e) => {
-    setOutreachMessage(e.target.value);
+    setMessageDialogOpen(true);
   };
 
   const handleCopyMessage = () => {
@@ -189,20 +184,139 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
           />
         </Container>
 
-        <ROIModal
-          open={roiModalOpen}
-          onClose={() => setRoiModalOpen(false)}
-          property={selectedProperty}
-        />
+        {/* ROI Dialog */}
+        <Dialog 
+          open={roiDialogOpen} 
+          onClose={() => setRoiDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedProperty && (
+            <>
+              <DialogTitle>
+                ROI Analysis
+                <Typography variant="subtitle2" color="text.secondary">
+                  {selectedProperty.address}
+                </Typography>
+              </DialogTitle>
+              <DialogContent>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.50' }}>
+                      <Typography variant="h6" gutterBottom>
+                        Investment Summary
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={4}>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Purchase Price
+                          </Typography>
+                          <Typography variant="h6">
+                            {formatCurrency(selectedProperty.price)}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Estimated Repairs
+                          </Typography>
+                          <Typography variant="h6">
+                            {formatCurrency(selectedProperty.estimated_repairs || 25000)}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Total Investment
+                          </Typography>
+                          <Typography variant="h6">
+                            {formatCurrency(selectedProperty.price + (selectedProperty.estimated_repairs || 25000))}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setRoiDialogOpen(false)}>Close</Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
 
-        <MessageModal
-          open={messageModalOpen}
-          onClose={() => setMessageModalOpen(false)}
-          property={selectedProperty}
-          message={outreachMessage}
-          onMessageChange={handleMessageChange}
-          onCopy={handleCopyMessage}
-        />
+        {/* Message Dialog */}
+        <Dialog 
+          open={messageDialogOpen} 
+          onClose={() => setMessageDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedProperty && (
+            <>
+              <DialogTitle>
+                Generate Outreach Message
+                <Typography variant="subtitle2" color="text.secondary">
+                  {selectedProperty.address}
+                </Typography>
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ mt: 2 }}>
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      p: 2, 
+                      bgcolor: 'grey.50',
+                      borderRadius: 2,
+                      mb: 2
+                    }}
+                  >
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Property Details:
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <Typography variant="body2">
+                          Price: {formatCurrency(selectedProperty.price)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="body2">
+                          Days on Market: {selectedProperty.days_on_market}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="body2">
+                          Motivation Score: {selectedProperty.motivation_score}%
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                  
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={12}
+                    value={outreachMessage}
+                    onChange={(e) => setOutreachMessage(e.target.value)}
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                  />
+                  
+                  <Button
+                    startIcon={<ContentCopyIcon />}
+                    onClick={handleCopyMessage}
+                    variant="contained"
+                    color="primary"
+                  >
+                    Copy Message
+                  </Button>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setMessageDialogOpen(false)}>Close</Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
 
         <Snackbar 
           open={notification.open} 
