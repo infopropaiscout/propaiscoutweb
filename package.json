@@ -1,0 +1,14 @@
+{
+  "name": "propai-scout",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "start": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "test": "cd frontend && npm test",
+    "install:frontend": "cd frontend && npm install"
+  }
+}
