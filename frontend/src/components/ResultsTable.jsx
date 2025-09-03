@@ -16,15 +16,13 @@ import {
   Tooltip,
   TablePagination,
   TableSortLabel,
-  Stack,
   CircularProgress
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import MessageIcon from '@mui/icons-material/Message';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { ActionButtons } from './ActionButtons';
 
-const ResultsTable = ({ results = [], isLoading, onExport, onROIClick, onMessageClick }) => {
+const ResultsTable = ({ results = [], isLoading, onExport }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState('motivation_score');
@@ -192,32 +190,17 @@ const ResultsTable = ({ results = [], isLoading, onExport, onROIClick, onMessage
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Button
-                          variant="contained"
-                          size="small"
-                          color="primary"
-                          onClick={() => onROIClick(property)}
-                          startIcon={<TrendingUpIcon />}
-                        >
-                          ROI
-                        </Button>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          color="primary"
-                          onClick={() => onMessageClick(property)}
-                          startIcon={<MessageIcon />}
-                        >
-                          Message
-                        </Button>
-                        <IconButton
-                          size="small"
-                          onClick={() => window.open(property.url, '_blank')}
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Stack>
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <ActionButtons property={property} />
+                        <Tooltip title="View Property">
+                          <IconButton
+                            size="small"
+                            onClick={() => window.open(property.url, '_blank')}
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
