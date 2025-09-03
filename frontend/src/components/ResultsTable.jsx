@@ -34,6 +34,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
+// ROI Dialog Component
 const ROIDialog = ({ open, onClose, property }) => {
   if (!property) return null;
 
@@ -169,6 +170,7 @@ const ROIDialog = ({ open, onClose, property }) => {
   );
 };
 
+// Outreach Message Dialog Component
 const OutreachDialog = ({ open, onClose, property }) => {
   const [message, setMessage] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
@@ -297,6 +299,7 @@ P.S. I'm ready to move forward quickly if this opportunity interests you.`;
   );
 };
 
+// Main ResultsTable Component
 const ResultsTable = ({ results = [], isLoading, onExport }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -306,10 +309,29 @@ const ResultsTable = ({ results = [], isLoading, onExport }) => {
   const [orderBy, setOrderBy] = useState('motivation_score');
   const [order, setOrder] = useState('desc');
 
+  console.log('ResultsTable render:', { 
+    resultsLength: results.length,
+    selectedProperty,
+    roiDialogOpen,
+    outreachDialogOpen
+  });
+
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
+  };
+
+  const handleROIClick = (property) => {
+    console.log('Opening ROI dialog for property:', property);
+    setSelectedProperty(property);
+    setRoiDialogOpen(true);
+  };
+
+  const handleMessageClick = (property) => {
+    console.log('Opening message dialog for property:', property);
+    setSelectedProperty(property);
+    setOutreachDialogOpen(true);
   };
 
   const sortedResults = React.useMemo(() => {
@@ -465,10 +487,7 @@ const ResultsTable = ({ results = [], isLoading, onExport }) => {
                           <Tooltip title="View ROI Analysis">
                             <IconButton
                               size="small"
-                              onClick={() => {
-                                setSelectedProperty(property);
-                                setRoiDialogOpen(true);
-                              }}
+                              onClick={() => handleROIClick(property)}
                             >
                               <TrendingUpIcon />
                             </IconButton>
@@ -476,10 +495,7 @@ const ResultsTable = ({ results = [], isLoading, onExport }) => {
                           <Tooltip title="Generate Outreach Message">
                             <IconButton
                               size="small"
-                              onClick={() => {
-                                setSelectedProperty(property);
-                                setOutreachDialogOpen(true);
-                              }}
+                              onClick={() => handleMessageClick(property)}
                             >
                               <MessageIcon />
                             </IconButton>
