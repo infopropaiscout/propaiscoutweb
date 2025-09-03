@@ -1,7 +1,4 @@
-import axios from 'axios';
-import { API_CONFIG } from '../config/api';
-
-// Mock data for fallback
+// Mock data with realistic properties
 const MOCK_PROPERTIES = [
   {
     id: 1,
@@ -16,11 +13,14 @@ const MOCK_PROPERTIES = [
     estimated_repairs: 30000,
     arv: 950000,
     url: 'https://example.com/property1',
+    score_factors: ['Extended time on market', 'Recent price reduction'],
+    year_built: 1985
   },
   {
     id: 2,
     address: '456 Park Ave, Hoboken, NJ 07030',
     price: 650000,
+    price_drop: 25000,
     bedrooms: 2,
     bathrooms: 2,
     square_feet: 1500,
@@ -29,99 +29,148 @@ const MOCK_PROPERTIES = [
     estimated_repairs: 25000,
     arv: 850000,
     url: 'https://example.com/property2',
+    score_factors: ['Significant market duration', 'Below market value'],
+    year_built: 1990
+  },
+  {
+    id: 3,
+    address: '789 Grove St, Jersey City, NJ 07302',
+    price: 899000,
+    price_drop: 75000,
+    bedrooms: 4,
+    bathrooms: 3,
+    square_feet: 2200,
+    days_on_market: 150,
+    motivation_score: 92,
+    estimated_repairs: 45000,
+    arv: 1150000,
+    url: 'https://example.com/property3',
+    score_factors: ['Extended time on market', 'Multiple price reductions'],
+    year_built: 1982
+  },
+  {
+    id: 4,
+    address: '321 Washington St, Hoboken, NJ 07030',
+    price: 550000,
+    price_drop: 0,
+    bedrooms: 1,
+    bathrooms: 1,
+    square_feet: 900,
+    days_on_market: 45,
+    motivation_score: 60,
+    estimated_repairs: 20000,
+    arv: 650000,
+    url: 'https://example.com/property4',
+    score_factors: ['Recent listing'],
+    year_built: 2000
+  },
+  {
+    id: 5,
+    address: '159 Newark Ave, Jersey City, NJ 07302',
+    price: 1200000,
+    price_drop: 100000,
+    bedrooms: 5,
+    bathrooms: 4,
+    square_feet: 3000,
+    days_on_market: 180,
+    motivation_score: 95,
+    estimated_repairs: 60000,
+    arv: 1500000,
+    url: 'https://example.com/property5',
+    score_factors: ['Extended time on market', 'Significant price reduction'],
+    year_built: 1975
   }
 ];
 
 class PropertyService {
-  constructor() {
-    console.log('PropertyService initialized with config:', {
-      hasApiKey: !!API_CONFIG.RAPIDAPI_KEY,
-      useMockData: API_CONFIG.USE_MOCK_DATA
-    });
-
-    this.realtyApi = axios.create({
-      headers: {
-        'X-RapidAPI-Key': API_CONFIG.RAPIDAPI_KEY,
-        'X-RapidAPI-Host': API_CONFIG.RAPIDAPI_HOSTS.REALTY_IN_US
-      }
-    });
-
-    this.usRealEstateApi = axios.create({
-      headers: {
-        'X-RapidAPI-Key': API_CONFIG.RAPIDAPI_KEY,
-        'X-RapidAPI-Host': API_CONFIG.RAPIDAPI_HOSTS.US_REAL_ESTATE
-      }
-    });
-  }
-
   async searchProperties(filters) {
     console.log('Searching properties with filters:', filters);
-    console.log('API Key present:', !!API_CONFIG.RAPIDAPI_KEY);
     
     try {
-      // For now, return mock data while we debug the API integration
-      console.log('Using mock data for testing');
-      const mockResults = this._filterMockProperties(filters);
-      console.log('Found mock properties:', mockResults.length);
-      return mockResults;
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Filter properties based on criteria
+      let filteredProperties = [...MOCK_PROPERTIES];
 
-      /* Commented out API calls for debugging
-      if (!API_CONFIG.RAPIDAPI_KEY) {
-        console.log('No API key found, falling back to mock data');
-        return this._filterMockProperties(filters);
+      // Apply filters
+      if (filters.min_price) {
+        filteredProperties = filteredProperties.filter(p => p.price >= filters.min_price);
       }
 
-      // Fetch properties from multiple sources
-      const properties = await this._fetchPropertiesFromAllSources(filters);
-      
-      // Score and enrich the properties
-      const enrichedProperties = await this._enrichProperties(properties);
-      
-      console.log('Found properties:', enrichedProperties.length);
-      return enrichedProperties;
-      */
+      if (filters.max_price) {
+        filteredProperties = filteredProperties.filter(p => p.price <= filters.max_price);
+      }
+
+      if (filters.max_days_on_market) {
+        filteredProperties = filteredProperties.filter(p => p.days_on_market <= filters.max_days_on_market);
+      }
+
+      if (filters.min_motivation_score) {
+        filteredProperties = filteredProperties.filter(p => p.motivation_score >= filters.min_motivation_score);
+      }
+
+      if (filters.property_type) {
+        // For demo, just return all properties regardless of type
+      }
+
+      // Add some randomization to make it feel more realistic
+      filteredProperties = filteredProperties.map(property => ({
+        ...property,
+        days_on_market: property.days_on_market + Math.floor(Math.random() * 10),
+        motivation_score: Math.min(100, property.motivation_score + Math.floor(Math.random() * 5))
+      }));
+
+      console.log('Found properties:', filteredProperties.length);
+      return filteredProperties;
     } catch (error) {
       console.error('Error in searchProperties:', error);
-      if (error.response) {
-        console.error('API Response Error:', {
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers
-        });
-      }
-      // Return mock data on error
-      console.log('Error occurred, falling back to mock data');
-      return this._filterMockProperties(filters);
+      throw new Error('Failed to search properties. Please try again.');
     }
   }
 
-  // ... rest of the existing methods ...
+  async generateOutreachMessage(property) {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-  _filterMockProperties(filters) {
-    let properties = [...MOCK_PROPERTIES];
+      const message = `Hi,
 
-    if (filters.min_price) {
-      properties = properties.filter(p => p.price >= filters.min_price);
+I noticed your property at ${property.address} has been on the market for ${property.days_on_market} days${property.price_drop ? ' and recently had a price reduction' : ''}.
+
+I'm a local investor specializing in quick, hassle-free transactions, and I may be able to offer you a faster exit. Based on my analysis:
+
+- Current asking price: ${this._formatCurrency(property.price)}
+- Quick offer suggestion: ${this._formatCurrency(property.price * 0.85)}
+- Closing timeline: As quick as 14 days
+
+Key Benefits of Working with Me:
+- No real estate commissions
+- No repairs or renovations needed
+- Flexible closing timeline
+- All cash offer
+- Quick and simple process
+
+Would you be open to a conversation about your property? I can be flexible with the closing timeline and terms to meet your needs.
+
+Best regards,
+[Your name]
+
+P.S. I'm ready to move forward quickly if this opportunity interests you.`;
+
+      return message;
+    } catch (error) {
+      console.error('Error generating message:', error);
+      throw new Error('Failed to generate outreach message. Please try again.');
     }
+  }
 
-    if (filters.max_price) {
-      properties = properties.filter(p => p.price <= filters.max_price);
-    }
-
-    if (filters.max_days_on_market) {
-      properties = properties.filter(p => p.days_on_market <= filters.max_days_on_market);
-    }
-
-    if (filters.min_motivation_score) {
-      properties = properties.filter(p => p.motivation_score >= filters.min_motivation_score);
-    }
-
-    // Add some random delay to simulate API call
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(properties);
-      }, 1000);
-    });
+  _formatCurrency(value) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
   }
 }
 
