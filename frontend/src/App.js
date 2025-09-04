@@ -8,14 +8,9 @@ import {
   CssBaseline,
   createTheme,
   ThemeProvider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid
 } from '@mui/material';
+import ROIDialog from './components/dialogs/ROIDialog';
+import OutreachDialog from './components/dialogs/OutreachDialog';
 import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import ResultsTable from './components/ResultsTable';
@@ -163,96 +158,17 @@ function App() {
           )}
         </Box>
 
-        {/* ROI Dialog */}
-        <Dialog 
-          open={roiDialogOpen} 
+        <ROIDialog
+          open={roiDialogOpen}
           onClose={() => setRoiDialogOpen(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>
-            ROI Analysis
-            {selectedProperty && (
-              <Typography variant="subtitle2" color="text.secondary">
-                {selectedProperty.address}
-              </Typography>
-            )}
-          </DialogTitle>
-          <DialogContent>
-            {selectedProperty && (
-              <Grid container spacing={3} sx={{ mt: 1 }}>
-                <Grid item xs={12} sm={4}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Purchase Price
-                  </Typography>
-                  <Typography variant="h6">
-                    {formatCurrency(selectedProperty.price)}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Estimated Repairs
-                  </Typography>
-                  <Typography variant="h6">
-                    {formatCurrency(selectedProperty.estimated_repairs)}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Potential ARV
-                  </Typography>
-                  <Typography variant="h6">
-                    {formatCurrency(selectedProperty.arv)}
-                  </Typography>
-                </Grid>
-              </Grid>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setRoiDialogOpen(false)}>Close</Button>
-          </DialogActions>
-        </Dialog>
+          property={selectedProperty}
+        />
 
-        {/* Message Dialog */}
-        <Dialog 
-          open={messageDialogOpen} 
+        <OutreachDialog
+          open={messageDialogOpen}
           onClose={() => setMessageDialogOpen(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>
-            Generate Message
-            {selectedProperty && (
-              <Typography variant="subtitle2" color="text.secondary">
-                {selectedProperty.address}
-              </Typography>
-            )}
-          </DialogTitle>
-          <DialogContent>
-            {selectedProperty && (
-              <TextField
-                fullWidth
-                multiline
-                rows={8}
-                defaultValue={`Hi,
-
-I noticed your property at ${selectedProperty.address} has been on the market for ${selectedProperty.days_on_market} days. I'm a local investor interested in making a quick, all-cash offer.
-
-Would you be open to discussing a potential offer of ${formatCurrency(selectedProperty.price * 0.85)}?
-
-Best regards,
-[Your name]`}
-                sx={{ mt: 2 }}
-              />
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => navigator.clipboard.writeText(document.querySelector('textarea').value)}>
-              Copy Message
-            </Button>
-            <Button onClick={() => setMessageDialogOpen(false)}>Close</Button>
-          </DialogActions>
-        </Dialog>
+          property={selectedProperty}
+        />
       </Container>
     </ThemeProvider>
   );
