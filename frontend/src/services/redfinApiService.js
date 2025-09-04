@@ -22,7 +22,8 @@ class RedfinApiService {
       // Build query parameters
       const queryParams = new URLSearchParams({
         regionId: regionId,
-        page: '1',
+        status: ['for_sale', 'ready_to_build'].join(','),
+        limit: '350',
         ...filters.min_price ? { minPrice: filters.min_price.toString() } : {},
         ...filters.max_price ? { maxPrice: filters.max_price.toString() } : {},
         ...filters.property_type ? { propertyType: this._mapPropertyType(filters.property_type) } : {}
@@ -85,32 +86,32 @@ class RedfinApiService {
   }
 
   _processSearchResponse(data, filters) {
-    if (!data?.properties) {
+    if (!data?.data || !Array.isArray(data.data)) {
       console.log('No properties found in response:', data);
       return [];
     }
 
-    const properties = data.properties.map(property => ({
-      id: property.propertyId || property.id,
-      address: `${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}`,
-      price: property.price,
-      beds: property.beds,
-      baths: property.baths,
-      sqft: property.sqft,
-      lot_size: property.lotSize,
-      year_built: property.yearBuilt,
-      property_type: property.propertyType,
-      days_on_market: property.daysOnMarket,
-      url: property.url,
-      photos: property.photos || [],
+    const properties = data.data.map(property => ({
+      id: property.mlsId || property.id || String(Math.random()),
+      address: `${property.address || ''}, ${property.city || ''}, ${property.state || ''} ${property.zipcode || ''}`,
+      price: property.price || property.listPrice,
+      beds: property.beds || property.bedrooms,
+      baths: property.baths || property.bathrooms,
+      sqft: property.sqft || property.squareFootage,
+      lot_size: property.lotSize || property.lotSqft,
+      year_built: property.yearBuilt || property.constructionYear,
+      property_type: property.propertyType || property.type,
+      days_on_market: property.daysOnMarket || this._calculateDaysOnMarket(property.listDate),
+      url: property.url || property.webUrl || '',
+      photos: (property.photos || [property.primaryPhoto]).filter(Boolean),
       location: {
-        latitude: property.latitude,
-        longitude: property.longitude
+        latitude: property.latitude || property.lat,
+        longitude: property.longitude || property.lng
       },
-      estimated_value: property.estimatedValue,
-      last_sold_price: property.lastSoldPrice,
-      last_sold_date: property.lastSoldDate,
-      status: property.status,
+      estimated_value: property.estimatedValue || property.zestimate,
+      last_sold_price: property.lastSoldPrice || property.previousListPrice,
+      last_sold_date: property.lastSoldDate || property.previousListDate,
+      status: property.status || 'for_sale',
       raw_data: property
     }));
 
