@@ -1,5 +1,5 @@
 import { API_CONFIG } from '../config/api';
-import { realtorApiService } from './realtorApiService';
+import { redfinApiService } from './redfinApiService';
 import { aiService } from './aiService';
 
 class PropertyService {
@@ -23,7 +23,7 @@ class PropertyService {
         limit: 50
       };
 
-      const properties = await realtorApiService.searchProperties(apiFilters);
+      const properties = await redfinApiService.searchProperties(apiFilters);
       
       // Filter properties by additional criteria
       const filteredProperties = properties.filter(property => {
