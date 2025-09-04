@@ -11,19 +11,22 @@ class RealtorApiService {
 
   async searchProperties(filters) {
     try {
+      // Format location for ZIP code search
+      const location = this._formatLocation(filters.location);
+      
       // Convert filters to Realtor.com API format
       const queryParams = new URLSearchParams({
-        location: filters.location || 'New-York_NY',
+        location,
         status: filters.status || 'for_sale',
         ...filters.price_min ? { price_min: filters.price_min } : {},
         ...filters.price_max ? { price_max: filters.price_max } : {},
-        ...filters.beds_min ? { beds_min: filters.beds_min } : {},
-        ...filters.baths_min ? { baths_min: filters.baths_min } : {},
         ...filters.property_type ? { property_type: filters.property_type } : {},
         ...filters.sort ? { sort: filters.sort } : {},
         limit: filters.limit || 50,
         offset: filters.offset || 0
       });
+
+      console.log('Searching with params:', queryParams.toString());
 
       const response = await fetch(
         `${API_CONFIG.ENDPOINTS.PROPERTY_SEARCH}?${queryParams}`,
@@ -31,15 +34,27 @@ class RealtorApiService {
       );
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
         throw new Error(`API request failed with status ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('API Response:', data);
       return this._processSearchResponse(data);
     } catch (error) {
       console.error('Error fetching properties:', error);
       throw new Error('Failed to fetch properties. Please try again.');
     }
+  }
+
+  _formatLocation(location) {
+    // Check if location is a ZIP code
+    if (/^\d{5}$/.test(location)) {
+      return location;
+    }
+    // Default to New York if no location provided
+    return location || 'New-York_NY';
   }
 
   async getPropertyDetails(propertyId) {

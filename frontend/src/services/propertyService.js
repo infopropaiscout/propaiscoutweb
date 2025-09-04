@@ -12,11 +12,37 @@ class PropertyService {
     }
 
     try {
-      const properties = await realtorApiService.searchProperties(filters);
+      // Format the filters for Realtor API
+      const apiFilters = {
+        location: filters.zip_codes[0], // Use first ZIP code as location
+        status: 'for_sale',
+        price_min: filters.min_price,
+        price_max: filters.max_price,
+        property_type: this._mapPropertyType(filters.property_type),
+        sort: 'newest',
+        limit: 50
+      };
+
+      const properties = await realtorApiService.searchProperties(apiFilters);
       
+      // Filter properties by additional criteria
+      const filteredProperties = properties.filter(property => {
+        // Apply ZIP code filter
+        if (filters.zip_codes.length > 0 && !filters.zip_codes.includes(property.address.match(/\d{5}/)?.[0])) {
+          return false;
+        }
+
+        // Apply days on market filter
+        if (filters.max_days_on_market && property.days_on_market > filters.max_days_on_market) {
+          return false;
+        }
+
+        return true;
+      });
+
       // Enhance properties with AI analysis
       const enhancedProperties = await Promise.all(
-        properties.map(async (property) => {
+        filteredProperties.map(async (property) => {
           try {
             const motivationScore = await aiService.calculateMotivationScore(property);
             return {
@@ -35,7 +61,10 @@ class PropertyService {
         })
       );
 
-      return enhancedProperties;
+      // Filter by motivation score if specified
+      return filters.min_motivation_score
+        ? enhancedProperties.filter(p => p.motivation_score >= filters.min_motivation_score)
+        : enhancedProperties;
     } catch (error) {
       console.error('Error in property search:', error);
       throw error;
@@ -58,6 +87,16 @@ class PropertyService {
     return aiService.analyzeROI(property);
   }
 
+  _mapPropertyType(type) {
+    const typeMap = {
+      'single-family': 'single_family',
+      'multi-family': 'multi_family',
+      'condo': 'condo',
+      '': null
+    };
+    return typeMap[type] || null;
+  }
+
   _formatCurrency(value) {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -67,7 +106,6 @@ class PropertyService {
   }
 
   _getMockProperties() {
-    // Return mock data for development
     return [
       {
         id: '1',
@@ -93,7 +131,6 @@ class PropertyService {
         motivation_score: 85,
         score: 85
       }
-      // Add more mock properties as needed
     ];
   }
 
