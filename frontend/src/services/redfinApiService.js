@@ -21,12 +21,11 @@ class RedfinApiService {
       
       // Build query parameters
       const queryParams = new URLSearchParams({
-        region_id: regionId,
-        ...filters.min_price ? { min_price: filters.min_price.toString() } : {},
-        ...filters.max_price ? { max_price: filters.max_price.toString() } : {},
-        ...filters.property_type ? { property_type: this._mapPropertyType(filters.property_type) } : {},
-        status: 'for_sale',
-        limit: '50'
+        regionId: regionId,
+        page: '1',
+        ...filters.min_price ? { minPrice: filters.min_price.toString() } : {},
+        ...filters.max_price ? { maxPrice: filters.max_price.toString() } : {},
+        ...filters.property_type ? { propertyType: this._mapPropertyType(filters.property_type) } : {}
       });
 
       const response = await fetch(
@@ -51,33 +50,14 @@ class RedfinApiService {
 
   async _getRegionId(zipCode) {
     try {
-      console.log('Searching for region with ZIP code:', zipCode);
+      console.log('Getting region ID for ZIP code:', zipCode);
       
-      const queryParams = new URLSearchParams({
-        location: zipCode,
-        limit: '1'
-      });
-
-      const response = await fetch(
-        `${API_CONFIG.ENDPOINTS.REGION_SEARCH}?${queryParams}`,
-        { headers: this.headers }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Region search error response:', errorText);
-        throw new Error(`Region search failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Region search response:', data);
-
-      // Get the first region ID from the response
-      const regionId = data?.regions?.[0]?.id;
+      const regionId = API_CONFIG.ENDPOINTS.ZIP_TO_REGION[zipCode];
       if (!regionId) {
-        throw new Error('No region found for ZIP code: ' + zipCode);
+        throw new Error(`No region ID mapping found for ZIP code: ${zipCode}. Currently supported ZIP codes: ${Object.keys(API_CONFIG.ENDPOINTS.ZIP_TO_REGION).join(', ')}`);
       }
 
+      console.log('Found region ID:', regionId);
       return regionId;
     } catch (error) {
       console.error('Error searching region:', error);
