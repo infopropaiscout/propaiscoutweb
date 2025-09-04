@@ -6,7 +6,7 @@ export const API_CONFIG = {
   API_BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',
   ENDPOINTS: {
     PROPERTY_SEARCH: 'https://redfin-com-data.p.rapidapi.com/properties/search-sale',
-    REGION_SEARCH: 'https://redfin-com-data.p.rapidapi.com/regions/search',
+    REGION_SEARCH: 'https://redfin-com-data.p.rapidapi.com/properties/search-regions',
     PROPERTY_DETAILS: 'https://redfin-com-data.p.rapidapi.com/properties/get-detail'
   }
 };

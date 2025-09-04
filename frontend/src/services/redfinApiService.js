@@ -21,12 +21,12 @@ class RedfinApiService {
       
       // Build query parameters
       const queryParams = new URLSearchParams({
-        regionId: regionId,
-        ...filters.min_price ? { minPrice: filters.min_price } : {},
-        ...filters.max_price ? { maxPrice: filters.max_price } : {},
-        ...filters.property_type ? { propertyType: this._mapPropertyType(filters.property_type) } : {},
-        sortBy: 'days_on_market',
-        sortOrder: 'asc'
+        region_id: regionId,
+        ...filters.min_price ? { min_price: filters.min_price.toString() } : {},
+        ...filters.max_price ? { max_price: filters.max_price.toString() } : {},
+        ...filters.property_type ? { property_type: this._mapPropertyType(filters.property_type) } : {},
+        status: 'for_sale',
+        limit: '50'
       });
 
       const response = await fetch(
@@ -51,24 +51,34 @@ class RedfinApiService {
 
   async _getRegionId(zipCode) {
     try {
+      console.log('Searching for region with ZIP code:', zipCode);
+      
+      const queryParams = new URLSearchParams({
+        location: zipCode,
+        limit: '1'
+      });
+
       const response = await fetch(
-        `${API_CONFIG.ENDPOINTS.REGION_SEARCH}?query=${zipCode}`,
+        `${API_CONFIG.ENDPOINTS.REGION_SEARCH}?${queryParams}`,
         { headers: this.headers }
       );
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Region search error response:', errorText);
         throw new Error(`Region search failed with status ${response.status}`);
       }
 
       const data = await response.json();
       console.log('Region search response:', data);
 
-      // Find the matching region for the ZIP code
-      const region = data.regions?.find(r => 
-        r.regionType === 'zip' && r.regionId && r.name.includes(zipCode)
-      );
+      // Get the first region ID from the response
+      const regionId = data?.regions?.[0]?.id;
+      if (!regionId) {
+        throw new Error('No region found for ZIP code: ' + zipCode);
+      }
 
-      return region?.regionId;
+      return regionId;
     } catch (error) {
       console.error('Error searching region:', error);
       throw error;
