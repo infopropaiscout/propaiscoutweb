@@ -27,9 +27,25 @@ class RealtorApiService {
 
       console.log('Searching with params:', queryParams.toString());
 
+      console.log('Making API request to:', API_CONFIG.ENDPOINTS.PROPERTY_SEARCH);
+      console.log('With headers:', this.headers);
+      
       const response = await fetch(
-        `${API_CONFIG.ENDPOINTS.PROPERTY_SEARCH}?${queryParams}`,
-        { headers: this.headers }
+        `${API_CONFIG.ENDPOINTS.PROPERTY_SEARCH}`,
+        { 
+          method: 'POST',
+          headers: this.headers,
+          body: JSON.stringify({
+            limit: 50,
+            offset: 0,
+            postal_code: location,
+            status: ["for_sale", "ready_to_build"],
+            sort: {
+              direction: "desc",
+              field: "list_date"
+            }
+          })
+        }
       );
 
       if (!response.ok) {
@@ -83,25 +99,25 @@ class RealtorApiService {
 
     return data.properties.map(property => ({
       id: property.property_id,
-      address: `${property.address.line}, ${property.address.city}, ${property.address.state_code} ${property.address.postal_code}`,
-      price: property.price,
-      beds: property.beds,
-      baths: property.baths,
-      sqft: property.building_size?.size || null,
-      lot_size: property.lot_size?.size || null,
+      address: `${property.address.line || ''}, ${property.address.city || ''}, ${property.address.state_code || ''} ${property.address.postal_code || ''}`,
+      price: property.price || property.list_price,
+      beds: property.beds || property.bedrooms,
+      baths: property.baths || property.bathrooms,
+      sqft: property.building_size?.size || property.sqft || null,
+      lot_size: property.lot_size?.size || property.lot_sqft || null,
       year_built: property.year_built,
-      property_type: property.prop_type,
+      property_type: property.prop_type || property.property_type,
       days_on_market: property.days_on_market || this._calculateDaysOnMarket(property.list_date),
-      url: property.rdc_web_url,
-      photos: property.photo_count > 0 ? [property.thumbnail] : [],
+      url: property.rdc_web_url || property.web_url || '',
+      photos: property.photos || (property.photo_count > 0 ? [property.thumbnail] : []),
       location: {
-        latitude: property.address.lat,
-        longitude: property.address.lon
+        latitude: property.address?.lat || property.location?.lat,
+        longitude: property.address?.lon || property.location?.lon
       },
-      estimated_value: null, // Not available in this API response
-      last_sold_price: property.last_sold?.price,
-      last_sold_date: property.last_sold?.date,
-      status: property.prop_status,
+      estimated_value: property.estimated_value || null,
+      last_sold_price: property.last_sold?.price || property.last_sold_price,
+      last_sold_date: property.last_sold?.date || property.last_sold_date,
+      status: property.prop_status || property.status,
       raw_data: property // Keep raw data for detailed analysis
     }));
   }
