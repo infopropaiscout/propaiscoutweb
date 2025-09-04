@@ -12,16 +12,16 @@ class PropertyService {
     }
 
     try {
-      // Format the filters for Realtor API
+      // Format the filters for Redfin API
       const apiFilters = {
-        location: filters.zip_codes[0], // Use first ZIP code as location
-        status: 'for_sale',
-        price_min: filters.min_price,
-        price_max: filters.max_price,
+        zip_codes: filters.zip_codes,
+        min_price: filters.min_price,
+        max_price: filters.max_price,
         property_type: this._mapPropertyType(filters.property_type),
-        sort: 'newest',
-        limit: 50
+        max_days_on_market: filters.max_days_on_market
       };
+      
+      console.log('Sending search request with filters:', apiFilters);
 
       const properties = await redfinApiService.searchProperties(apiFilters);
       
@@ -76,7 +76,7 @@ class PropertyService {
       return this._getMockPropertyDetails(propertyId);
     }
 
-    return realtorApiService.getPropertyDetails(propertyId);
+    return redfinApiService.getPropertyDetails(propertyId);
   }
 
   async generateOutreachMessage(property) {
@@ -89,9 +89,9 @@ class PropertyService {
 
   _mapPropertyType(type) {
     const typeMap = {
-      'single-family': 'single_family',
-      'multi-family': 'multi_family',
-      'condo': 'condo',
+      'single-family': 'SINGLE_FAMILY',
+      'multi-family': 'MULTI_FAMILY',
+      'condo': 'CONDO',
       '': null
     };
     return typeMap[type] || null;
