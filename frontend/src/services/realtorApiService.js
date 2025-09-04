@@ -16,14 +16,13 @@ class RealtorApiService {
       
       // Convert filters to Realtor.com API format
       const queryParams = new URLSearchParams({
-        location,
-        status: filters.status || 'for_sale',
-        ...filters.price_min ? { price_min: filters.price_min } : {},
-        ...filters.price_max ? { price_max: filters.price_max } : {},
-        ...filters.property_type ? { property_type: filters.property_type } : {},
-        ...filters.sort ? { sort: filters.sort } : {},
-        limit: filters.limit || 50,
-        offset: filters.offset || 0
+        postal_code: location,
+        offset: filters.offset || '0',
+        limit: filters.limit || '50',
+        ...filters.price_min ? { price_min: filters.price_min.toString() } : {},
+        ...filters.price_max ? { price_max: filters.price_max.toString() } : {},
+        ...filters.property_type ? { prop_type: filters.property_type } : {},
+        sort: filters.sort || 'newest'
       });
 
       console.log('Searching with params:', queryParams.toString());
@@ -77,31 +76,32 @@ class RealtorApiService {
   }
 
   _processSearchResponse(data) {
-    if (!data?.data?.home_search?.results) {
+    if (!data?.properties) {
+      console.log('No properties found in response:', data);
       return [];
     }
 
-    return data.data.home_search.results.map(property => ({
+    return data.properties.map(property => ({
       id: property.property_id,
-      address: `${property.location.address.line}, ${property.location.address.city}, ${property.location.address.state_code} ${property.location.address.postal_code}`,
-      price: property.list_price,
-      beds: property.description.beds,
-      baths: property.description.baths,
-      sqft: property.description.sqft,
-      lot_size: property.description.lot_sqft,
-      year_built: property.description.year_built,
-      property_type: property.description.type,
-      days_on_market: this._calculateDaysOnMarket(property.list_date),
-      url: property.href,
-      photos: property.photos?.map(photo => photo.href) || [],
+      address: `${property.address.line}, ${property.address.city}, ${property.address.state_code} ${property.address.postal_code}`,
+      price: property.price,
+      beds: property.beds,
+      baths: property.baths,
+      sqft: property.building_size?.size || null,
+      lot_size: property.lot_size?.size || null,
+      year_built: property.year_built,
+      property_type: property.prop_type,
+      days_on_market: property.days_on_market || this._calculateDaysOnMarket(property.list_date),
+      url: property.rdc_web_url,
+      photos: property.photo_count > 0 ? [property.thumbnail] : [],
       location: {
-        latitude: property.location.address.coordinate?.lat,
-        longitude: property.location.address.coordinate?.lon
+        latitude: property.address.lat,
+        longitude: property.address.lon
       },
-      estimated_value: property.current_estimates?.[0]?.estimate || null,
-      last_sold_price: property.last_sold_price,
-      last_sold_date: property.last_sold_date,
-      status: property.status,
+      estimated_value: null, // Not available in this API response
+      last_sold_price: property.last_sold?.price,
+      last_sold_date: property.last_sold?.date,
+      status: property.prop_status,
       raw_data: property // Keep raw data for detailed analysis
     }));
   }
