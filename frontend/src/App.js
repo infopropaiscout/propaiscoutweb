@@ -42,42 +42,9 @@ function App() {
     setError(null);
     try {
       console.log('Searching with filters:', filters);
-      // For now, let's use mock data to ensure the UI works
-      const mockData = [
-        {
-          id: 1,
-          address: '123 Main St, Newark, NJ',
-          price: 350000,
-          price_drop: 25000,
-          days_on_market: 95,
-          motivation_score: 85,
-          bedrooms: 3,
-          bathrooms: 2,
-          square_feet: 1800,
-          score_factors: ['Price reduced recently', 'Long time on market'],
-          estimated_repairs: 25000,
-          arv: 450000,
-          url: 'https://example.com/property/1'
-        },
-        {
-          id: 2,
-          address: '456 Oak Ave, Jersey City, NJ',
-          price: 425000,
-          price_drop: 0,
-          days_on_market: 45,
-          motivation_score: 65,
-          bedrooms: 4,
-          bathrooms: 2.5,
-          square_feet: 2200,
-          score_factors: ['Absentee owner'],
-          estimated_repairs: 35000,
-          arv: 550000,
-          url: 'https://example.com/property/2'
-        }
-      ];
-      
-      setProperties(mockData);
-      console.log('Properties set:', mockData);
+      const fetchedProperties = await propertyService.searchProperties(filters);
+      setProperties(fetchedProperties);
+      console.log('Properties set:', fetchedProperties);
     } catch (err) {
       console.error('Error fetching properties:', err);
       setError('Failed to fetch properties. Please try again.');

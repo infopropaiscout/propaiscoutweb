@@ -31,7 +31,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
-const ResultsTable = ({ results = [], isLoading, onExport }) => {
+const ResultsTable = ({ results = [], isLoading, onExport, onROIClick, onMessageClick }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -211,10 +211,7 @@ const ResultsTable = ({ results = [], isLoading, onExport }) => {
                         <Tooltip title="View ROI Analysis">
                           <IconButton
                             size="small"
-                            onClick={() => {
-                              setSelectedProperty(property);
-                              setRoiDialogOpen(true);
-                            }}
+                            onClick={() => onROIClick(property)}
                           >
                             <TrendingUpIcon />
                           </IconButton>
@@ -222,10 +219,7 @@ const ResultsTable = ({ results = [], isLoading, onExport }) => {
                         <Tooltip title="Generate Outreach Message">
                           <IconButton
                             size="small"
-                            onClick={() => {
-                              setSelectedProperty(property);
-                              // Add message generation logic
-                            }}
+                            onClick={() => onMessageClick(property)}
                           >
                             <MessageIcon />
                           </IconButton>
