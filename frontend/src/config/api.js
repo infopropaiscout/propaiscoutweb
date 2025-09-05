@@ -1,25 +1,19 @@
 export const API_CONFIG = {
   USE_MOCK_DATA: false,
   RAPIDAPI_KEY: process.env.REACT_APP_RAPIDAPI_KEY || '',
-  RAPIDAPI_HOST: 'redfin-com-data.p.rapidapi.com',
   OPENAI_API_KEY: process.env.REACT_APP_OPENAI_API_KEY || '',
-  API_BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',
-  ENDPOINTS: {
-    PROPERTY_SEARCH: 'https://redfin-com-data.p.rapidapi.com/properties/search-sale',
-    PROPERTY_DETAILS: 'https://redfin-com-data.p.rapidapi.com/properties/get-detail',
-    // Map of ZIP codes to region IDs
-    ZIP_TO_REGION: {
-      '07030': '6_2446',  // Example region ID
-      '07302': '6_2447',
-      '07306': '6_2448',
-      '07307': '6_2449',
-      '08837': '6_2450',
-      '10001': '6_2451',
-      '10002': '6_2452',
-      '10003': '6_2453',
-      '10004': '6_2454',
-      '10005': '6_2455',
-      '10006': '6_2456'
-    }
-  }
+  API_BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000',
+  
+  // Default search locations
+  DEFAULT_LOCATIONS: {
+    NJ: ['Jersey City', 'Hoboken', 'Newark', 'Edison'],
+    NY: ['New York', 'Brooklyn', 'Queens', 'Bronx']
+  },
+  
+  // Default ZIP codes
+  DEFAULT_ZIPS: [
+    '07030', '07302', '07306', '07307', // Hoboken & Jersey City
+    '10001', '10002', '10003', '10004', // Manhattan
+    '11201', '11217', '11238'  // Brooklyn
+  ]
 };

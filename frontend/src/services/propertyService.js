@@ -1,5 +1,4 @@
 import { API_CONFIG } from '../config/api';
-import { redfinApiService } from './redfinApiService';
 import { aiService } from './aiService';
 
 class PropertyService {
@@ -12,37 +11,29 @@ class PropertyService {
     }
 
     try {
-      // Format the filters for Redfin API
-      const apiFilters = {
-        zip_codes: filters.zip_codes,
-        min_price: filters.min_price,
-        max_price: filters.max_price,
-        property_type: this._mapPropertyType(filters.property_type),
-        max_days_on_market: filters.max_days_on_market
-      };
-      
-      console.log('Sending search request with filters:', apiFilters);
-
-      const properties = await redfinApiService.searchProperties(apiFilters);
-      
-      // Filter properties by additional criteria
-      const filteredProperties = properties.filter(property => {
-        // Apply ZIP code filter
-        if (filters.zip_codes.length > 0 && !filters.zip_codes.includes(property.address.match(/\d{5}/)?.[0])) {
-          return false;
-        }
-
-        // Apply days on market filter
-        if (filters.max_days_on_market && property.days_on_market > filters.max_days_on_market) {
-          return false;
-        }
-
-        return true;
+      // Build query parameters
+      const queryParams = new URLSearchParams({
+        ...(filters.zip_codes?.length > 0 ? { zipCode: filters.zip_codes[0] } : {}),
+        ...(filters.city ? { city: filters.city } : {}),
+        ...(filters.state ? { state: filters.state } : {}),
+        ...(filters.min_price ? { minPrice: filters.min_price } : {}),
+        ...(filters.max_price ? { maxPrice: filters.max_price } : {}),
+        page: '1'
       });
 
+      // Call our backend API
+      const response = await fetch(`/api/listings?${queryParams}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch properties');
+      }
+
+      const data = await response.json();
+      
       // Enhance properties with AI analysis
       const enhancedProperties = await Promise.all(
-        filteredProperties.map(async (property) => {
+        data.properties.map(async (property) => {
           try {
             const motivationScore = await aiService.calculateMotivationScore(property);
             return {
@@ -61,10 +52,7 @@ class PropertyService {
         })
       );
 
-      // Filter by motivation score if specified
-      return filters.min_motivation_score
-        ? enhancedProperties.filter(p => p.motivation_score >= filters.min_motivation_score)
-        : enhancedProperties;
+      return enhancedProperties;
     } catch (error) {
       console.error('Error in property search:', error);
       throw error;
@@ -76,7 +64,9 @@ class PropertyService {
       return this._getMockPropertyDetails(propertyId);
     }
 
-    return redfinApiService.getPropertyDetails(propertyId);
+    // For MVP, we'll return the basic property data
+    // In the future, we can add a detailed property endpoint
+    return propertyId;
   }
 
   async generateOutreachMessage(property) {
@@ -85,16 +75,6 @@ class PropertyService {
 
   async analyzeROI(property) {
     return aiService.analyzeROI(property);
-  }
-
-  _mapPropertyType(type) {
-    const typeMap = {
-      'single-family': 'SINGLE_FAMILY',
-      'multi-family': 'MULTI_FAMILY',
-      'condo': 'CONDO',
-      '': null
-    };
-    return typeMap[type] || null;
   }
 
   _formatCurrency(value) {
@@ -109,27 +89,15 @@ class PropertyService {
     return [
       {
         id: '1',
-        address: '123 Main St, New York, NY 10001',
+        address: '123 Main St, Jersey City, NJ 07302',
         price: 500000,
         beds: 3,
         baths: 2,
         sqft: 1500,
-        lot_size: 2000,
-        year_built: 1990,
-        property_type: 'Single Family',
-        days_on_market: 30,
+        image: 'https://via.placeholder.com/300x200',
         url: '#',
-        photos: [],
-        location: {
-          latitude: 40.7128,
-          longitude: -74.0060
-        },
-        estimated_value: 550000,
-        last_sold_price: 450000,
-        last_sold_date: '2020-01-01',
-        status: 'for_sale',
-        motivation_score: 85,
-        score: 85
+        provider: 'Mock Data',
+        motivation_score: 85
       }
     ];
   }
