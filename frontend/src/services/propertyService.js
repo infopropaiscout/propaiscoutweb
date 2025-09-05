@@ -21,15 +21,30 @@ class PropertyService {
         page: '1'
       });
 
-      // Call our backend API
-      const response = await fetch(`/api/listings?${queryParams}`);
+      console.log('Fetching properties with params:', queryParams.toString());
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch properties');
+      // Call our backend API
+      const response = await fetch(`/api/listings?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response:', await response.text());
+        throw new Error('Invalid response format from server');
       }
 
       const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('API error response:', data);
+        throw new Error(data.error || 'Failed to fetch properties');
+      }
+
+      console.log('API response:', data);
       
       // Enhance properties with AI analysis
       const enhancedProperties = await Promise.all(
