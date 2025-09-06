@@ -10,20 +10,19 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@vercel/node": "^5.3.21",
     "axios": "^1.6.7",
+    "cors": "^2.8.5",
+    "next": "^14.2.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-query": "^3.39.3",
-    "react-scripts": "^5.0.1",
-    "web-vitals": "^2.1.4",
-    "cors": "^2.8.5"
+    "react-query": "^3.39.3"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "vercel-build": "npm run build"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "eslintConfig": {
     "extends": [
