@@ -15,18 +15,24 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/pages/api/$1"
+      "src": "/api/listings",
+      "dest": "/pages/api/listings.js"
     },
     {
-      "handle": "filesystem"
+      "src": "^/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "^/[^.]+$",
+      "dest": "/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/build/$1"
+      "dest": "/$1"
     }
   ],
   "env": {
-    "RAPIDAPI_KEY": "71aba9fbb6mshf14840260f6b5c7p17980fjsn318cf304588e"
+    "RAPIDAPI_KEY": "71aba9fbb6mshf14840260f6b5c7p17980fjsn318cf304588e",
+    "NODE_ENV": "production"
   }
 }
