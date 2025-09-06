@@ -1,8 +1,21 @@
 {
   "version": 2,
-  "buildCommand": "next build",
-  "installCommand": "npm install",
-  "framework": "nextjs",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
   "env": {
     "RAPIDAPI_KEY": "71aba9fbb6mshf14840260f6b5c7p17980fjsn318cf304588e"
   }

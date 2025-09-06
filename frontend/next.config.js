@@ -4,6 +4,8 @@ const nextConfig = {
   env: {
     RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
   },
+  distDir: '.next',
+  output: 'standalone',
   async rewrites() {
     return [
       {
