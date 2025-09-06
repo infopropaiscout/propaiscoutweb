@@ -2,8 +2,8 @@
   "version": 2,
   "framework": "nextjs",
   "outputDirectory": ".next",
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "installCommand": "cd frontend && npm install",
+  "buildCommand": "npm install && npm run build",
+  "installCommand": "npm install",
   "env": {
     "RAPIDAPI_KEY": "71aba9fbb6mshf14840260f6b5c7p17980fjsn318cf304588e"
   }
