@@ -11,11 +11,15 @@ const nextConfig = {
     config.resolve.fallback = { fs: false, path: false };
     return config;
   },
-  async rewrites() {
+  async headers() {
     return [
       {
         source: '/api/:path*',
-        destination: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,POST' },
+          { key: 'Access-Control-Allow-Headers', value: '*' },
+        ],
       },
     ];
   },

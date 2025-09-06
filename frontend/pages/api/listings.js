@@ -115,8 +115,9 @@ const normalizeLoopNetResponse = (properties) => {
 };
 
 export default async function handler(req, res) {
-  // Run the middleware
-  await runMiddleware(req, res, cors);
+  try {
+    // Run the middleware
+    await runMiddleware(req, res, cors);
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -282,12 +283,20 @@ export default async function handler(req, res) {
     }
   }
 
-  if (properties.length > 0) {
-    return res.status(200).json({ properties });
-  } else {
-    return res.status(404).json({
-      error: 'No properties found. Try another location.',
-      providerErrors: errors
+    if (properties.length > 0) {
+      return res.status(200).json({ properties });
+    } else {
+      return res.status(200).json({
+        properties: [],
+        message: 'No properties found. Try another location.',
+        providerErrors: errors
+      });
+    }
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
     });
   }
 }
