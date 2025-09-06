@@ -5,15 +5,11 @@ const nextConfig = {
     RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
   },
   distDir: '.next',
-  output: 'standalone',
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: '/api/:path*',
-      },
-    ];
+  output: 'export',
+  images: {
+    unoptimized: true
   },
+  trailingSlash: true,
 };
 
 module.exports = nextConfig;
