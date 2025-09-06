@@ -5,11 +5,20 @@ const nextConfig = {
     RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
   },
   distDir: '.next',
-  output: 'export',
-  images: {
-    unoptimized: true
+  output: 'standalone',
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
+  webpack: (config) => {
+    config.resolve.fallback = { fs: false, path: false };
+    return config;
   },
-  trailingSlash: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
