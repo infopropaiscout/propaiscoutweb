@@ -10,5 +10,18 @@
     "build": "cd frontend && npm run build",
     "test": "cd frontend && npm test",
     "install:frontend": "cd frontend && npm install"
-  }
+  },
+  "description": "PropAI Scout is an advanced real estate lead generation and scoring tool that helps identify and prioritize motivated seller leads in New Jersey and New York markets.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/infopropaiscout/propaiscoutweb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/infopropaiscout/propaiscoutweb/issues"
+  },
+  "homepage": "https://github.com/infopropaiscout/propaiscoutweb#readme"
 }

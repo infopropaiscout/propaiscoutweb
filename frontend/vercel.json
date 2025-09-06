@@ -11,20 +11,19 @@
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "^/static/(.*)",
       "dest": "/static/$1"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/(.*)",
+      "src": ".*",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "RAPIDAPI_KEY": "71aba9fbb6mshf14840260f6b5c7p17980fjsn318cf304588e"
+  }
 }

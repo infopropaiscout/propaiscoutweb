@@ -28,7 +28,7 @@ interface NormalizedProperty {
 
 // US Real Estate Provider
 class USRealEstateProvider implements PropertyProvider {
-  private readonly host = 'us-real-estate.p.rapidapi.com';
+  private readonly host = 'us-real-estate-listings.p.rapidapi.com';
 
   getHost(): string {
     return this.host;
@@ -37,17 +37,19 @@ class USRealEstateProvider implements PropertyProvider {
   async search(params: SearchParams): Promise<NormalizedProperty[]> {
     try {
       const queryParams = new URLSearchParams({
-        offset: '0',
-        limit: '50',
+        offset: ((params.page || 1) - 1) * 20,
+        limit: '20',
+        status: 'for_sale',
         ...(params.zipCode ? { postal_code: params.zipCode } : {}),
         ...(params.city && params.state ? {
-          city: params.city,
-          state_code: params.state
-        } : {})
+          location: `${params.city}, ${params.state}`
+        } : {}),
+        ...(params.minPrice ? { price_min: params.minPrice.toString() } : {}),
+        ...(params.maxPrice ? { price_max: params.maxPrice.toString() } : {})
       }).toString();
 
       const response = await fetch(
-        `https://${this.host}/properties/v2/list?${queryParams}`,
+        `https://${this.host}/v2/list-for-sale?${queryParams}`,
         {
           method: 'GET',
           headers: {
@@ -89,7 +91,7 @@ class USRealEstateProvider implements PropertyProvider {
 
 // Zillow Provider
 class ZillowProvider implements PropertyProvider {
-  private readonly host = 'zillow-com1.p.rapidapi.com';
+  private readonly host = 'real-time-zillow-data.p.rapidapi.com';
 
   getHost(): string {
     return this.host;
@@ -98,8 +100,15 @@ class ZillowProvider implements PropertyProvider {
   async search(params: SearchParams): Promise<NormalizedProperty[]> {
     try {
       const queryParams = new URLSearchParams({
-        location: params.zipCode || `${params.city}, ${params.state}`,
-        status_type: 'ForSale'
+        status: 'forSale',
+        page: params.page?.toString() || '1',
+        ...(params.zipCode ? { zipcode: params.zipCode } : {}),
+        ...(params.city && params.state ? {
+          city: params.city,
+          state: params.state
+        } : {}),
+        ...(params.minPrice ? { minPrice: params.minPrice.toString() } : {}),
+        ...(params.maxPrice ? { maxPrice: params.maxPrice.toString() } : {})
       }).toString();
 
       const response = await fetch(
@@ -131,11 +140,11 @@ class ZillowProvider implements PropertyProvider {
     }
 
     return data.props.map((property: any) => ({
-      address: property.address || '',
-      price: property.price || 0,
-      beds: property.beds || 0,
-      baths: property.baths || 0,
-      sqft: property.sqft || 0,
+      address: `${property.streetAddress || ''}, ${property.city || ''}, ${property.state || ''} ${property.zipcode || ''}`,
+      price: typeof property.price === 'string' ? parseInt(property.price.replace(/[^0-9]/g, '')) : (property.price || 0),
+      beds: property.bedrooms || 0,
+      baths: property.bathrooms || 0,
+      sqft: property.livingArea || 0,
       image: property.imgSrc || '',
       url: property.detailUrl || '',
       provider: 'Zillow'
